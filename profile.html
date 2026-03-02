@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <a href="/">Главная страница</a>
+    <a href="/CreateTeam">Создать команду</a>
+    <button>Ваши команды</button>
+    <button onclick="ExitProfile()">Выйти из аккаунта</button>
+</body>
+    <script>
+    function ExitProfile() {
+        localStorage.clear("user");
+        savedUser = null;
+        window.location.href = "/login";
+      }
+    </script>
+</html>
