@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+     <form action="">
+        <h1>Registration</h1>
+        <div class="input-box">
+          <input type="text" placeholder="Ваше имя" required id="name" />
+          <i class="bx bx-user"></i>
+        </div>
+        <div class="input-box">
+          <input type="text" placeholder="Ваш Login" required id="log" />
+          <i class="bx bx-user"></i>
+        </div>
+        <div class="input-box">
+          <input type="password" placeholder="Пароль" required id="pass1" />
+          <i class="bx bxs-lock-alt"></i>
+        </div>
+        <div class="input-box">
+          <input
+            type="password"
+            placeholder="Пароль еще раз"
+            required
+            id="pass2"
+          />
+          <i class="bx bxs-lock-alt"></i>
+        </div>
+
+        <button type="submit" class="btn" onclick="sendDataRegistration()">
+          Зарегистрироваться
+        </button>
+
+        <div class="register-link">
+          <p>Уже зарегистрированы? <a href="/login">Войдите!</a></p>
+        </div>
+      </form>
+      <script src="/js/register.js"></script>
+</body>
+</html>
