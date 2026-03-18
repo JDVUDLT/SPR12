@@ -1,23 +1,46 @@
-const express = require("express");
-const server = express();
-const fs = require("fs-extra");
-server.listen(3000);
-server.use(express.json());
-server.use(express.static(__dirname + "/public"));
-server.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+const express = require('express');
+const path = require('path');
+const fs = require('fs-extra');
+
+const app = express();
+const PORT = 3000;
+
+// Middleware
+app.use(express.json());
+app.use(express.static(path.join(__dirname))); // Раздаем файлы из корня
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+
+// Маршруты для HTML страниц (явно указываем)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
-server.get("/Registration", (req, res) => {
-  res.sendFile(__dirname + "/register.html");
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
 });
-server.get("/Login", (req, res) => {
-  res.sendFile(__dirname + "/login.html");
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'register.html'));
 });
-server.get("/Profile", (req, res) => {
-  res.sendFile(__dirname + "/profile.html");
+
+app.get('/profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'profile.html'));
 });
-server.get("/CreateTeam", (req, res) => {
-  res.sendFile(__dirname + "/CreateTeam.html");
+
+app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'dashboard.html'));
+});
+
+app.get('/sprints', (req, res) => {
+    res.sendFile(path.join(__dirname, 'sprints.html'));
+});
+
+// API маршруты (оставляем как есть)
+// ... все ваши /api/... маршруты
+
+app.listen(PORT, () => {
+    console.log(`Сервер запущен на http://localhost:${PORT}`);
 });
 server.post("/sendDataRegistration", async (req, res) => {
   try {

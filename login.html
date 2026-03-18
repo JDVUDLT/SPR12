@@ -2,47 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Вход в систему</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            margin: 50px auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .register-link {
-            text-align: center;
-            margin-top: 15px;
-        }
-    </style>
+    <link rel="stylesheet" href="css/login.css">
 </head>
 <body>
     <h1>Вход в систему</h1>
@@ -64,40 +24,9 @@
     </form>
     
     <div class="register-link">
-        Нет аккаунта? <a href="/register.html">Зарегистрироваться</a>
+        Нет аккаунта? <a href="/register">Зарегистрироваться</a>
     </div>
 
-    <script>
-        // Вставляем сюда улучшенные функции
-        function data(data) {
-            return {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            }
-        }
-        
-        // Проверяем, может пользователь уже залогинен
-        (function checkLoggedIn() {
-            const savedUser = localStorage.getItem('user');
-            if (savedUser) {
-                try {
-                    const user = JSON.parse(savedUser);
-                    if (user && user.id) {
-                        // Если уже залогинен, перенаправляем на профиль
-                        window.location.href = "/profile";
-                    }
-                } catch (e) {
-                    localStorage.removeItem('user');
-                }
-            }
-        })();
-        
-        async function sendData() {
-            // ... вставляем улучшенную функцию sendData из Этапа 2 ...
-        }
-    </script>
+    <script src="js/login.js"></script>
 </body>
 </html>
