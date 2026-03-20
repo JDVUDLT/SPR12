@@ -1,0 +1,1063 @@
+/* ======================================
+   SPRINT CAPACITY PLANNER - ОСНОВНЫЕ СТИЛИ
+   ====================================== */
+
+/* ===== СБРОС СТИЛЕЙ (RESET) ===== */
+/* Убираем отступы и поля по умолчанию */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box; /* Чтобы padding не увеличивал ширину */
+}
+
+/* ===== ОСНОВНЫЕ СТИЛИ ===== */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background-color: #f5f7fa;  /* Светло-серый фон */
+    color: #2c3e50;             /* Темно-синий текст */
+    line-height: 1.6;           /* Межстрочный интервал */
+    min-height: 100vh;          /* Минимальная высота на весь экран */
+}
+
+/* Контейнер для контента */
+.container {
+    max-width: 1200px;          /* Максимальная ширина */
+    margin: 0 auto;             /* Центрирование */
+    padding: 20px;              /* Отступы внутри */
+}
+
+/* ===== НАВИГАЦИОННАЯ ПАНЕЛЬ ===== */
+.navbar {
+    background-color: #2c3e50;  /* Темно-синий фон */
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Тень снизу */
+    position: sticky;           /* Прилипает при прокрутке */
+    top: 0;
+    z-index: 1000;              /* Чтобы была поверх других элементов */
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between; /* Лого слева, ссылки справа */
+    align-items: center;            /* Выравнивание по центру */
+}
+
+.nav-logo {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+    letter-spacing: 1px;        /* Интервал между буквами */
+}
+
+.nav-logo:hover {
+    color: #3498db;              /* Голубой при наведении */
+}
+
+.nav-links {
+    display: flex;
+    gap: 10px;                   /* Расстояние между ссылками */
+}
+
+.nav-links a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    transition: all 0.3s ease;   /* Плавное изменение */
+    font-weight: 500;
+}
+
+.nav-links a:hover {
+    background-color: #34495e;    /* Темнее при наведении */
+}
+
+.nav-links a.active {
+    background-color: #3498db;    /* Голубой для активной страницы */
+    color: white;
+}
+
+/* ===== КАРТОЧКИ ===== */
+.card {
+    background: white;
+    border-radius: 12px;          /* Скругленные углы */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Легкая тень */
+    padding: 25px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1); /* Тень больше при наведении */
+    transform: translateY(-2px);   /* Чуть приподнимается */
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ecf0f1; /* Светлая линия */
+}
+
+.card-header h2, .card-header h3 {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.card-header h2 {
+    font-size: 1.5rem;
+}
+
+.card-header h3 {
+    font-size: 1.2rem;
+}
+
+/* ===== КНОПКИ ===== */
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    line-height: 1;
+}
+
+/* Основная кнопка (голубая) */
+.btn-primary {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Второстепенная кнопка (серая) */
+.btn-secondary {
+    background-color: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #7f8c8d;
+    transform: translateY(-2px);
+}
+
+/* Кнопка опасного действия (красная) */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+}
+
+/* Маленькая кнопка */
+.btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Кнопка на всю ширину */
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* Кнопка редактирования (оранжевая) */
+.btn-edit {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #e67e22;
+}
+
+/* Отключенная кнопка */
+.btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* ===== ФОРМЫ ===== */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #34495e;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: white;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-group input.error {
+    border-color: #e74c3c;
+}
+
+.form-group .error-message {
+    color: #e74c3c;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* Строка с двумя полями */
+.form-row {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .half {
+    flex: 1;
+}
+
+/* Действия с формой (кнопки) */
+.form-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: flex-end;
+    margin-top: 25px;
+    padding-top: 15px;
+    border-top: 1px solid #ecf0f1;
+}
+
+/* ===== ТАБЛИЦЫ ===== */
+.table-container {
+    overflow-x: auto; /* Горизонтальная прокрутка на мобильных */
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    color: #2c3e50;
+    font-weight: 600;
+    padding: 15px 12px;
+    text-align: left;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #ecf0f1;
+    vertical-align: middle;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.table .text-center {
+    text-align: center;
+}
+
+/* ===== СТАТУСЫ ===== */
+.status-active {
+    color: #27ae60;
+    font-weight: 500;
+    background-color: rgba(39, 174, 96, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-fired {
+    color: #e74c3c;
+    font-weight: 500;
+    background-color: rgba(231, 76, 60, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-vacation {
+    color: #f39c12;
+    font-weight: 500;
+    background-color: rgba(243, 156, 18, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-sick {
+    color: #9b59b6;
+    font-weight: 500;
+    background-color: rgba(155, 89, 182, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* ===== ФОРМЫ ДЛЯ СОТРУДНИКОВ И ОТСУТСТВИЙ ===== */
+.employee-form,
+.absence-form {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border-left: 4px solid #3498db;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.employee-form h3,
+.absence-form h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+/* ===== СЕЛЕКТОР КОМАНДЫ ===== */
+.team-selector {
+    max-width: 400px;
+    margin: 20px 0;
+}
+
+.team-selector select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: white;
+    cursor: pointer;
+}
+
+.team-selector select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* ===== СТРАНИЦЫ АВТОРИЗАЦИИ ===== */
+.auth-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 200px); /* Вычитаем высоту навигации */
+    padding: 20px;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.auth-card h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+    font-size: 2rem;
+}
+
+/* ===== ПРОФИЛЬ ===== */
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #3498db, #2c3e50);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.3);
+}
+
+.profile-info {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.info-label {
+    font-weight: 600;
+    width: 150px;
+    color: #7f8c8d;
+}
+
+.info-value {
+    color: #2c3e50;
+    flex: 1;
+}
+
+/* ===== ДАШБОРД (КАРТА ТРУДОЕМКОСТИ) ===== */
+.capacity-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.capacity-table th,
+.capacity-table td {
+    border: 1px solid #ecf0f1;
+    padding: 12px;
+    text-align: left;
+}
+
+.capacity-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.capacity-bar {
+    background-color: #3498db;
+    height: 24px;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+    min-width: 4px;
+}
+
+.capacity-bar.warning {
+    background-color: #f39c12;
+}
+
+.capacity-bar.danger {
+    background-color: #e74c3c;
+}
+
+/* ===== ИНДИКАТОР ЗАГРУЗКИ ===== */
+.loading {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ===== УВЕДОМЛЕНИЯ ===== */
+.alert {
+    padding: 15px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-weight: 500;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeeba;
+}
+
+.alert-info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+/* ===== УТИЛИТЫ (ВСПОМОГАТЕЛЬНЫЕ КЛАССЫ) ===== */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.text-left {
+    text-align: left;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.ml-10 {
+    margin-left: 10px;
+}
+
+.mr-10 {
+    margin-right: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+.visible {
+    display: block;
+}
+
+/* ===== АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ УСТРОЙСТВ ===== */
+@media (max-width: 768px) {
+    /* Навигация */
+    .nav-container {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .nav-links {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .nav-links a {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+    
+    /* Контейнер */
+    .container {
+        padding: 15px;
+    }
+    
+    /* Карточки */
+    .card {
+        padding: 15px;
+    }
+    
+    .card-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    /* Таблицы */
+    .table th,
+    .table td {
+        padding: 8px 4px;
+        font-size: 12px;
+    }
+    
+    /* Кнопки */
+    .btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    
+    .btn-small {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    /* Формы */
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    /* Профиль */
+    .info-row {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .info-label {
+        width: auto;
+    }
+    
+    /* Авторизация */
+    .auth-card {
+        padding: 25px;
+    }
+}
+
+/* Для очень маленьких экранов */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    h2 {
+        font-size: 1.2rem;
+    }
+    
+    .card-header h2 {
+        font-size: 1.2rem;
+    }
+    
+    .table {
+        font-size: 11px;
+    }
+    
+    .btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}
+
+/* ===== ПЕЧАТЬ (для экспорта) ===== */
+@media print {
+    .navbar,
+    .btn,
+    .form-actions,
+    .employee-form,
+    .absence-form {
+        display: none;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .table th {
+        background-color: #f0f0f0;
+    }
+}
+/* Статусы отсутствий */
+.status-vacation {
+    color: #f39c12;
+    font-weight: 500;
+    background-color: rgba(243, 156, 18, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-sick {
+    color: #9b59b6;
+    font-weight: 500;
+    background-color: rgba(155, 89, 182, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-dayoff {
+    color: #3498db;
+    font-weight: 500;
+    background-color: rgba(52, 152, 219, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-business {
+    color: #e67e22;
+    font-weight: 500;
+    background-color: rgba(230, 126, 52, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+.status-default {
+    color: #7f8c8d;
+    font-weight: 500;
+    background-color: rgba(127, 140, 141, 0.1);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+}
+
+/* Форма отсутствия */
+.absence-form {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border-left: 4px solid #e67e22;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.absence-form h3 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+}
+/* Статусы для будущих отсутствий */
+.status-vacation-future {
+    color: #f39c12;
+    font-weight: 500;
+    background-color: rgba(243, 156, 18, 0.05);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px dashed #f39c12;
+}
+
+.status-sick-future {
+    color: #9b59b6;
+    font-weight: 500;
+    background-color: rgba(155, 89, 182, 0.05);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px dashed #9b59b6;
+}
+
+.status-dayoff-future {
+    color: #3498db;
+    font-weight: 500;
+    background-color: rgba(52, 152, 219, 0.05);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px dashed #3498db;
+}
+
+.status-business-future {
+    color: #e67e22;
+    font-weight: 500;
+    background-color: rgba(230, 126, 52, 0.05);
+    padding: 4px 8px;
+    border-radius: 20px;
+    display: inline-block;
+    border: 1px dashed #e67e22;
+}
+/* ===== ПРОФИЛЬ ===== */
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(135deg, #3498db, #2c3e50);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    box-shadow: 0 5px 20px rgba(52, 152, 219, 0.3);
+}
+
+.profile-info {
+    background-color: #f8f9fa;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+}
+
+.info-row {
+    display: flex;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.info-label {
+    font-weight: 600;
+    width: 150px;
+    color: #7f8c8d;
+}
+
+.info-value {
+    color: #2c3e50;
+    flex: 1;
+}
+
+/* Статистика */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.stat-label {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+.btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
+    box-shadow: none;
+}
+
+.btn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Стили для кнопки генерации */
+#generateSprintsBtn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+#generateSprintsBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+#generateSprintsBtn:active {
+    transform: translateY(0);
+}
+
+#generateSprintsBtn:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
+#generateSprintsBtn:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Анимация загрузки */
+#generateSprintsBtn.generating {
+    background: linear-gradient(90deg, #3498db, #2980b9, #3498db);
+    background-size: 200% 100%;
+    animation: gradientMove 1.5s ease infinite;
+}
+
+/* ===== ДАШБОРД ===== */
+.capacity-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.capacity-table th,
+.capacity-table td {
+    border: 1px solid #ecf0f1;
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.capacity-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.capacity-cell {
+    position: relative;
+    min-width: 150px;
+}
+
+.capacity-bar {
+    background: linear-gradient(90deg, #3498db, #2980b9);
+    height: 28px;
+    border-radius: 14px;
+    transition: width 0.3s ease;
+    min-width: 4px;
+    display: inline-block;
+    position: relative;
+}
+
+.capacity-value {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.sprint-row {
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.sprint-row:hover {
+    background-color: #f8f9fa;
+}
+
+.employee-details-row td {
+    background-color: #f8f9fa;
+    padding: 20px;
+}
+
+.employee-details {
+    margin: 10px 0;
+}
+
+.table-small {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.table-small th,
+.table-small td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #ecf0f1;
+    text-align: left;
+}
+
+.table-small th {
+    background-color: #ecf0f1;
+    font-weight: 600;
+}
+
+.hint {
+    color: #7f8c8d;
+    font-size: 12px;
+    font-weight: normal;
+}
+
+.text-center {
+    text-align: center;
+}
+
+/* Стили для форм редактирования */
+.employee-form,
+.absence-form {
+    background-color: #fff9e6;
+    border-left: 4px solid #f39c12;
+}
+
+.employee-form h3,
+.absence-form h3 {
+    color: #e67e22;
+    margin-bottom: 20px;
+}
+
+/* Улучшенные кнопки */
+.btn-edit {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+}
+
+.btn-small {
+    padding: 4px 10px;
+    margin: 0 2px;
+    font-size: 12px;
+}
+
+/* Анимация для кнопок */
+.btn {
+    transition: all 0.2s ease;
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Подтверждение удаления */
+.confirm-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+
+@keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}

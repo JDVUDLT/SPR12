@@ -1,32 +1,137 @@
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Вход в систему</title>
-    <link rel="stylesheet" href="css/login.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль пользователя</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
-    <h1>Вход в систему</h1>
-    
-    <form onsubmit="event.preventDefault(); sendData();">
-        <div class="form-group">
-            <label for="log">Логин:</label>
-            <input type="text" id="log" required minlength="3" 
-                   placeholder="Введите логин">
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">SprintPlanner</a>
+            <div class="nav-links">
+                <a href="/">Главная</a>
+                <a href="/dashboard">Дашборд</a>
+                <a href="/sprints">Спринты</a>
+                <a href="/profile" class="active">Профиль</a>
+                <a href="#" id="logoutBtn">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Профиль пользователя</h1>
+        
+        <!-- Карточка профиля -->
+        <div class="card">
+            <div class="profile-header">
+                <div class="profile-avatar" id="userAvatar">?</div>
+                <h2 id="userName">Загрузка...</h2>
+            </div>
+            
+            <!-- Отображение информации (видно по умолчанию) -->
+            <div id="profileInfo">
+                <div class="profile-info">
+                    <div class="info-row">
+                        <div class="info-label">Логин:</div>
+                        <div class="info-value" id="userLogin">-</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Email:</div>
+                        <div class="info-value" id="userEmail">-</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">ID:</div>
+                        <div class="info-value" id="userId">-</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">Дата регистрации:</div>
+                        <div class="info-value" id="userRegDate">-</div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="editProfileBtn">Редактировать профиль</button>
+                    <button class="btn btn-secondary" id="changePasswordBtn">Сменить пароль</button>
+                </div>
+            </div>
+            
+            <!-- Форма редактирования (скрыта) -->
+            <form id="editProfileForm" style="display: none;">
+                <h3>Редактирование профиля</h3>
+                
+                <div class="form-group">
+                    <label>Имя:</label>
+                    <input type="text" id="editName" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Email:</label>
+                    <input type="email" id="editEmail">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">Отмена</button>
+                </div>
+            </form>
+            
+            <!-- Форма смены пароля (скрыта) -->
+            <form id="changePasswordForm" style="display: none;">
+                <h3>Смена пароля</h3>
+                
+                <div class="form-group">
+                    <label>Старый пароль:</label>
+                    <input type="password" id="oldPassword" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Новый пароль (мин. 6 символов):</label>
+                    <input type="password" id="newPassword" required minlength="6">
+                </div>
+                
+                <div class="form-group">
+                    <label>Подтверждение пароля:</label>
+                    <input type="password" id="confirmPassword" required minlength="6">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Сменить пароль</button>
+                    <button type="button" class="btn btn-secondary" id="cancelPasswordBtn">Отмена</button>
+                </div>
+            </form>
         </div>
         
-        <div class="form-group">
-            <label for="pass1">Пароль:</label>
-            <input type="password" id="pass1" required 
-                   placeholder="Введите пароль">
+        <!-- Статистика -->
+        <div class="card">
+            <h3>Статистика</h3>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statTeams">0</div>
+                    <div class="stat-label">Команд</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statEmployees">0</div>
+                    <div class="stat-label">Сотрудников</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statAbsences">0</div>
+                    <div class="stat-label">Отсутствий</div>
+                </div>
+            </div>
         </div>
         
-        <button type="submit">Войти</button>
-    </form>
-    
-    <div class="register-link">
-        Нет аккаунта? <a href="/register">Зарегистрироваться</a>
+        <!-- Блок для сообщений -->
+        <div id="message" class="message"></div>
     </div>
 
-    <script src="js/login.js"></script>
+    <!-- Подключаем скрипты в правильном порядке -->
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/profile.js"></script>
 </body>
 </html>
