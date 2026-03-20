@@ -118,6 +118,8 @@ function setupEventListeners() {
     if (addAbsenceBtn) {
         addAbsenceBtn.addEventListener('click', addAbsence);
     }
+
+    
     }
 
 // ===== РАБОТА С КОМАНДАМИ =====
@@ -910,4 +912,121 @@ function hideEditAbsenceForm() {
 // Отмена редактирования отсутствия
 function cancelEditAbsence() {
     hideEditAbsenceForm();
+}
+
+// ===== ФИЛЬТРАЦИЯ СОТРУДНИКОВ =====
+
+let allEmployees = []; // Храним всех сотрудников для фильтрации
+
+// Загрузить сотрудников (обновленная версия)
+async function loadEmployees() {
+    if (!currentTeamId) return;
+    
+    try {
+        console.log(`📋 Загрузка сотрудников команды ${currentTeamId}`);
+        
+        const employees = await api.getEmployees(currentTeamId);
+        allEmployees = employees; // Сохраняем всех сотрудников
+        console.log(`📋 Загружено сотрудников: ${employees.length}`);
+        
+        // Применяем текущие фильтры
+        applyFilters();
+        
+    } catch (error) {
+        console.error('❌ Ошибка загрузки сотрудников:', error);
+        utils.showMessage('message', 'Ошибка загрузки сотрудников', 'error');
+    }
+}
+
+// Применить фильтры
+function applyFilters() {
+    const searchText = document.getElementById('searchEmployee')?.value.toLowerCase() || '';
+    const filterRole = document.getElementById('filterRole')?.value || '';
+    
+    let filteredEmployees = [...allEmployees];
+    
+    // Фильтр по имени
+    if (searchText) {
+        filteredEmployees = filteredEmployees.filter(emp => 
+            emp.fullName.toLowerCase().includes(searchText)
+        );
+    }
+    
+    // Фильтр по роли
+    if (filterRole) {
+        filteredEmployees = filteredEmployees.filter(emp => emp.role === filterRole);
+    }
+    
+    // Обновляем отображение
+    displayEmployees(filteredEmployees);
+    
+    // Показываем количество найденных
+    const countSpan = document.getElementById('employeesCount');
+    if (countSpan) {
+        countSpan.textContent = `${filteredEmployees.length} из ${allEmployees.length}`;
+    }
+}
+
+// Добавить обработчики фильтров
+function setupFilterListeners() {
+    const searchInput = document.getElementById('searchEmployee');
+    const filterRole = document.getElementById('filterRole');
+    
+    if (searchInput) {
+        searchInput.addEventListener('input', () => applyFilters());
+    }
+    
+    if (filterRole) {
+        filterRole.addEventListener('change', () => applyFilters());
+    }
+}
+
+// ===== ПАГИНАЦИЯ =====
+let currentPage = 1;
+const itemsPerPage = 10;
+
+// Отобразить сотрудников с пагинацией
+function displayEmployeesPaginated(employees) {
+    const totalPages = Math.ceil(employees.length / itemsPerPage);
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    const pageEmployees = employees.slice(start, end);
+    
+    displayEmployees(pageEmployees);
+    updatePaginationControls(totalPages);
+}
+
+// Обновить элементы пагинации
+function updatePaginationControls(totalPages) {
+    const container = document.getElementById('paginationControls');
+    if (!container) return;
+    
+    if (totalPages <= 1) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    
+    let html = `
+        <button class="btn-pagination" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+            ← Назад
+        </button>
+        <span class="page-info">Страница ${currentPage} из ${totalPages}</span>
+        <button class="btn-pagination" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>
+            Вперед →
+        </button>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// Сменить страницу
+function changePage(page) {
+    if (page < 1) return;
+    const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
+    if (page > totalPages) return;
+    
+    currentPage = page;
+    applyFilters();
 }

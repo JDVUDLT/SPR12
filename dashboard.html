@@ -16,7 +16,7 @@
                 <a href="/dashboard" class="active">Дашборд</a>
                 <a href="/sprints">Спринты</a>
                 <a href="/profile">Профиль</a>
-                <a href="#" id="logoutBtn">Выйти</a>
+                <a href="/login" id="logoutBtn">Выйти</a>
             </div>
         </div>
     </nav>
@@ -68,7 +68,15 @@
                     <div class="stat-label">Спринтов</div>
                 </div>
             </div>
-
+        <div class="card">
+            <div class="card-header">
+                <h2>📊 Визуализация трудоемкости</h2>
+                <small class="hint">Показаны первые 20 спринтов</small>
+            </div>
+            <div id="chartContainer" class="chart-container">
+                <div class="text-center">Загрузка данных...</div>
+            </div>
+        </div>  
             <!-- Таблица трудоемкости -->
             <div class="card">
                 <div class="card-header">
