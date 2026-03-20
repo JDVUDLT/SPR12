@@ -1021,6 +1021,79 @@ function updatePaginationControls(totalPages) {
     container.innerHTML = html;
 }
 
+// ===== УВЕДОМЛЕНИЯ О ПРЕДСТОЯЩИХ ОТПУСКАХ =====
+function checkUpcomingAbsences() {
+    if (!currentTeamId) return;
+    
+    const today = new Date();
+    const threeDaysFromNow = new Date(today);
+    threeDaysFromNow.setDate(today.getDate() + 3);
+    
+    api.getAbsences(currentTeamId).then(absences => {
+        const upcomingAbsences = absences.filter(absence => {
+            const startDate = new Date(absence.startDate);
+            return startDate >= today && startDate <= threeDaysFromNow;
+        });
+        
+        if (upcomingAbsences.length > 0) {
+            api.getEmployees(currentTeamId).then(employees => {
+                const employeeMap = {};
+                employees.forEach(emp => employeeMap[emp.id] = emp);
+                
+                let message = '📢 Предстоящие отсутствия:\n';
+                upcomingAbsences.forEach(absence => {
+                    const employee = employeeMap[absence.employeeId];
+                    if (employee) {
+                        message += `\n• ${employee.fullName} - ${getAbsenceTypeName(absence.type)} с ${utils.formatDate(absence.startDate)}`;
+                    }
+                });
+                
+                // Показываем уведомление
+                showNotification(message, 'warning');
+            });
+        }
+    }).catch(error => {
+        console.error('Ошибка проверки отсутствий:', error);
+    });
+}
+
+// Показать уведомление
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <div class="notification-content">
+            <span class="notification-icon">${type === 'warning' ? '⚠️' : type === 'success' ? '✅' : 'ℹ️'}</span>
+            <span class="notification-message">${message}</span>
+            <button class="notification-close">&times;</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Анимация появления
+    setTimeout(() => notification.classList.add('show'), 10);
+    
+    // Закрытие по клику
+    notification.querySelector('.notification-close').onclick = () => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 300);
+    };
+    
+    // Автоматическое закрытие через 5 секунд
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, 5000);
+}
+
+// Вызываем проверку при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(checkUpcomingAbsences, 2000);
+});
+
 // Сменить страницу
 function changePage(page) {
     if (page < 1) return;
