@@ -22,30 +22,39 @@
     </nav>
 
     <div class="container">
-        <h1>📊 Карта трудоемкости команды</h1>
+        <h1> Карта трудоемкости команды</h1>
         
-        <!-- Фильтры -->
-        <div class="card">
-            <div class="card-header">
-                <h2>Фильтры</h2>
+    <!-- Фильтры -->
+    <div class="card">
+        <div class="card-header">
+            <h2>Фильтры</h2>
+        </div>
+        <div class="filters-container">
+            <div class="form-group">
+                <label for="teamSelect">🏢 Выберите команду:</label>
+                <select id="teamSelect" class="filter-select">
+                    <option value="">-- Выберите команду --</option>
+                </select>
             </div>
-            <div class="form-row">
-                <div class="form-group half">
-                    <label>Выберите команду:</label>
-                    <select id="teamSelect">
-                        <option value="">-- Выберите команду --</option>
-                    </select>
-                </div>
-                <div class="form-group half">
-                    <label>Год:</label>
-                    <select id="yearSelect"></select>
-                </div>
+            
+            <div class="form-group">
+                <label for="yearSelect">📅 Год:</label>
+                <select id="yearSelect" class="filter-select"></select>
             </div>
-            <div class="form-actions">
-                <button class="btn btn-primary" id="refreshBtn">🔄 Обновить</button>
-                <button class="btn btn-secondary" id="exportBtn">📎 Экспорт в CSV</button>
+            
+            <div class="filter-actions">
+                <button class="btn btn-primary" id="refreshBtn">
+                    <span class="btn-icon">🔄</span> Обновить
+                </button>
+                <button class="btn btn-success" id="exportExcelBtn">
+                    <span class="btn-icon">📊</span> Экспорт в Excel
+                </button>
+                <button class="btn btn-secondary" id="printBtn">
+                    <span class="btn-icon">🖨️</span> Печать
+                </button>
             </div>
         </div>
+    </div>
 
         <!-- Секция с данными -->
         <div id="capacitySection" style="display: none;">
@@ -68,15 +77,16 @@
                     <div class="stat-label">Спринтов</div>
                 </div>
             </div>
-        <div class="card">
-            <div class="card-header">
-                <h2>📊 Визуализация трудоемкости</h2>
-                <small class="hint">Показаны первые 20 спринтов</small>
+            <!-- Визуализация трудоемкости -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Визуализация трудоемкости</h2>
+                    <small class="hint">Показаны первые 20 спринтов</small>
+                </div>
+                <div id="chartContainer" class="chart-container">
+                    <div class="text-center">Загрузка данных...</div>
+                </div>
             </div>
-            <div id="chartContainer" class="chart-container">
-                <div class="text-center">Загрузка данных...</div>
-            </div>
-        </div>  
             <!-- Таблица трудоемкости -->
             <div class="card">
                 <div class="card-header">

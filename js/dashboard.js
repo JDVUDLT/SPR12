@@ -47,10 +47,13 @@ function initYearSelector() {
     if (!yearSelect) return;
     
     const currentYear = new Date().getFullYear();
-    for (let i = currentYear - 1; i <= currentYear + 1; i++) {
+    yearSelect.innerHTML = '';
+    
+    // Добавляем годы (последние 2 и следующие 2)
+    for (let i = currentYear - 1; i <= currentYear + 2; i++) {
         const option = document.createElement('option');
         option.value = i;
-        option.textContent = i;
+        option.textContent = `${i} год`;
         if (i === currentYear) option.selected = true;
         yearSelect.appendChild(option);
     }
@@ -104,10 +107,16 @@ function setupEventListeners() {
         });
     }
     
-    // Кнопка экспорта
-    const exportBtn = document.getElementById('exportBtn');
+    // Экспорт в Excel
+    const exportBtn = document.getElementById('exportExcelBtn');
     if (exportBtn) {
-        exportBtn.addEventListener('click', exportToCSV);
+        exportBtn.addEventListener('click', exportToExcel);
+    }
+
+    // Печать
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+        printBtn.addEventListener('click', printReport);
     }
 }
 
@@ -554,3 +563,211 @@ function drawCapacityChart(capacityData) {
     container.innerHTML = html;
     console.log("✅ График отрисован");
 }
+
+// ===== ЭКСПОРТ В EXCEL =====
+async function exportToExcel() {
+    console.log("📊 Экспорт в Excel");
+    
+    try {
+        const capacityData = await getCurrentCapacityData();
+        if (!capacityData || !capacityData.sprints) {
+            alert("Нет данных для экспорта");
+            return;
+        }
+        
+        // Создаем CSV данные
+        let csv = [];
+        
+        // Заголовки
+        csv.push(['Спринт', 'Дата начала', 'Дата окончания', 'Рабочих дней', 'Доступно чел-дней', 'Загрузка %']);
+        
+        // Данные по спринтам
+        capacityData.sprints.forEach(sprint => {
+            const maxCapacity = Math.max(...capacityData.sprints.map(s => s.totalCapacity), 1);
+            const percent = Math.round((sprint.totalCapacity / maxCapacity) * 100);
+            
+            csv.push([
+                sprint.name,
+                utils.formatDate(sprint.startDate),
+                utils.formatDate(sprint.endDate),
+                sprint.workingDays,
+                sprint.totalCapacity,
+                `${percent}%`
+            ]);
+        });
+        
+        // Пустая строка
+        csv.push([]);
+        csv.push(['Детализация по сотрудникам']);
+        csv.push(['Спринт', 'Сотрудник', 'Рабочих дней', 'Вклад']);
+        
+        // Детализация по сотрудникам
+        capacityData.sprints.forEach(sprint => {
+            if (sprint.employeeDetails && sprint.employeeDetails.length > 0) {
+                sprint.employeeDetails.forEach(emp => {
+                    csv.push([
+                        sprint.name,
+                        emp.name,
+                        emp.workingDays,
+                        emp.capacity
+                    ]);
+                });
+            }
+        });
+        
+        // Конвертируем в строку
+        const csvString = csv.map(row => 
+            row.map(cell => `"${cell || ''}"`).join(',')
+        ).join('\n');
+        
+        // Создаем и скачиваем файл
+        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `capacity_${currentTeamId}_${currentYear}.csv`);
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        showNotification('Экспорт выполнен успешно!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Ошибка экспорта:', error);
+        showNotification('Ошибка экспорта', 'error');
+    }
+}
+
+// Получить текущие данные
+async function getCurrentCapacityData() {
+    const [employees, sprints, absences, holidays] = await Promise.all([
+        api.getEmployees(currentTeamId),
+        api.getSprints(currentTeamId),
+        api.getAbsences(currentTeamId),
+        api.getHolidays(currentTeamId)
+    ]);
+    
+    const yearSprints = sprints.filter(s => new Date(s.startDate).getFullYear() === currentYear);
+    return calculateCapacity(employees || [], yearSprints, absences || [], holidays || []);
+}
+
+
+// ===== ПЕЧАТЬ =====
+function printReport() {
+    console.log("🖨️ Печать отчета");
+    
+    // Получаем данные для печати
+    const stats = document.querySelector('.stats-grid');
+    const table = document.getElementById('capacityTable');
+    const chart = document.getElementById('chartContainer');
+    
+    if (!table) return;
+    
+    // Создаем окно для печати
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Отчет по трудоемкости</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 40px;
+                }
+                h1 {
+                    color: #2c3e50;
+                    text-align: center;
+                }
+                h2 {
+                    color: #3498db;
+                    margin-top: 30px;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin: 20px 0;
+                }
+                th, td {
+                    border: 1px solid #ddd;
+                    padding: 8px;
+                    text-align: left;
+                }
+                th {
+                    background-color: #f2f2f2;
+                }
+                .stats {
+                    display: flex;
+                    justify-content: space-around;
+                    margin: 30px 0;
+                }
+                .stat-card {
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                    text-align: center;
+                    width: 200px;
+                }
+                .stat-number {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #3498db;
+                }
+                .footer {
+                    text-align: center;
+                    margin-top: 50px;
+                    color: #7f8c8d;
+                    font-size: 12px;
+                }
+                @media print {
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <h1>Отчет по трудоемкости команды</h1>
+            <p style="text-align: center;">Дата: ${new Date().toLocaleDateString('ru-RU')}</p>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">${document.getElementById('statTotalCapacity').textContent}</div>
+                    <div>Всего человеко-дней</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${document.getElementById('statAvgCapacity').textContent}</div>
+                    <div>Среднее на спринт</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${document.getElementById('statEmployees').textContent}</div>
+                    <div>Сотрудников</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${document.getElementById('statSprints').textContent}</div>
+                    <div>Спринтов</div>
+                </div>
+            </div>
+            
+            <h2>Трудоемкость по спринтам</h2>
+            ${table.outerHTML}
+            
+            <div class="footer">
+                Отчет сгенерирован автоматически в системе SprintPlanner
+            </div>
+            
+            <script>
+                window.onload = () => {
+                    window.print();
+                    setTimeout(() => window.close(), 1000);
+                };
+            <\/script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
+
