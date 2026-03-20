@@ -23,33 +23,7 @@
 
     <!-- Основной контент -->
     <div class="container">
-    <!-- Блок поиска -->
-        <div class="search-bar">
-            <div class="form-row">
-                <div class="form-group half">
-                    <input type="text" id="searchEmployee" placeholder="🔍 Поиск сотрудников по имени..." class="search-input">
-                </div>
-                <div class="form-group half">
-                    <select id="filterRole" class="filter-select">
-                        <option value="">Все роли</option>
-                        <option value="developer">Разработчик</option>
-                        <option value="qa">Тестировщик</option>
-                        <option value="analyst">Аналитик</option>
-                        <option value="pm">Project Manager</option>
-                        <option value="designer">Дизайнер</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Секция выбора команды -->
-
-        <div class="card">
-            <div class="card-header">
-                <h2>Мои команды</h2>
-                <button class="btn btn-primary" id="showCreateTeamBtn">+ Новая команда</button>
-            </div>
-            
+        <!-- Секция выбора команды -->           
             <!-- Форма создания команды (скрыта) -->
             <div id="createTeamForm" class="employee-form" style="display: none;">
                 <h3>Создать новую команду</h3>
@@ -63,21 +37,43 @@
                 </div>
             </div>
             
-            <!-- Выбор команды -->
+        <!-- Выбор команды -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Мои команды</h2>
+                <button class="btn btn-primary" id="showCreateTeamBtn">+ Новая команда</button>
+            </div>
+            
             <div class="team-selector">
                 <select id="teamSelect">
                     <option value="">-- Выберите команду --</option>
                 </select>
             </div>
+            
+            <!-- Добавляем блок с информацией о выбранной команде -->
+            <div id="selectedTeamInfo" class="selected-team-info" style="display: none;">
+                <div class="team-info-card">
+                    <div class="team-info-header">
+                        <span class="team-info-icon">👥</span>
+                        <span class="team-info-name" id="selectedTeamName"></span>
+                    </div>
+                    <div class="team-info-stats">
+                        <div class="team-stat">
+                            <span class="stat-value" id="teamEmployeesCount">0</span>
+                            <span class="stat-label">сотрудников</span>
+                        </div>
+                        <div class="team-stat">
+                            <span class="stat-value" id="teamAbsencesCount">0</span>
+                            <span class="stat-label">отсутствий</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <h1>Управление командой</h1>
-        
-        <div class="card-header">
-            <h2>Сотрудники команды <span id="employeesCount" class="count-badge"></span></h2>
-        </div>
 
-        <!-- Секция сотрудников (показывается только когда выбрана команда) -->
+        <!-- Секция сотрудников -->
         <div id="employeeSection" style="display: none;">
             <!-- Добавление сотрудника -->
             <div class="card">
@@ -148,9 +144,38 @@
                         <button class="btn btn-secondary" onclick="cancelEditEmployee()">Отмена</button>
                     </div>
                 </div>
+               
+                <!-- Блок поиска и фильтров -->
+                <div class="search-bar">
+                    <!-- Результат поиска -->
+                    <div id="searchResultInfo" class="search-result-info" style="display: none;">
+                        <span class="result-icon">🔍</span>
+                        <span id="searchResultText"></span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <label>🔍 Поиск по имени</label>
+                            <input type="text" id="searchEmployee" 
+                                placeholder="Введите имя сотрудника..." 
+                                class="search-input"
+                                autocomplete="off">
+                        </div>
+                        <div class="form-group half">
+                            <label>📋 Фильтр по роли</label>
+                            <select id="filterRole" class="filter-select">
+                                <option value="">Все роли</option>
+                                <option value="developer">Разработчик</option>
+                                <option value="qa">Тестировщик</option>
+                                <option value="analyst">Аналитик</option>
+                                <option value="pm">Project Manager</option>
+                                <option value="designer">Дизайнер</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>            
                 <!-- Таблица сотрудников -->
                 <div class="table-container">
-                    <table class="table" id="employeesTable">
+                    <table class="table">
                         <thead>
                             <tr>
                                 <th>ФИО</th>
@@ -161,12 +186,11 @@
                             </tr>
                         </thead>
                         <tbody id="employeesList">
-                            <tr>
-                                <td colspan="5" class="text-center">Выберите команду</td>
-                            </tr>
+                            <tr><td colspan="5" class="text-center">Выберите команду</td></tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
             </div>
             <div class="card">
     <div class="card-header">
