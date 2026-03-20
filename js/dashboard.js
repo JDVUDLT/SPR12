@@ -348,9 +348,9 @@ function calculateWorkingDaysInSprint(sprint, holidaySet) {
 function displayCapacityData(capacityData) {
     const tbody = document.getElementById('capacityTableBody');
     
-    // Проверяем, есть ли данные и не пустые ли они
+    // Проверяем, есть ли данные
     if (!capacityData || !capacityData.sprints || capacityData.sprints.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Нет спринтов за выбранный год. Перейдите в раздел "Спринты" для генерации</td></tr>';
+        tbody.innerHTML = '躬<td colspan="5" class="text-center">Нет спринтов за выбранный год. Перейдите в раздел "Спринты" для генерации</td></tr>';
         return;
     }
     
@@ -360,7 +360,7 @@ function displayCapacityData(capacityData) {
     });
     
     if (validSprints.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center">Нет спринтов за выбранный год. Перейдите в раздел "Спринты" для генерации</td></tr>';
+        tbody.innerHTML = '躬<td colspan="5" class="text-center">Нет спринтов за выбранный год. Перейдите в раздел "Спринты" для генерации</td></tr>';
         return;
     }
     
@@ -419,13 +419,14 @@ function displayCapacityData(capacityData) {
     
     tbody.innerHTML = html;
     
+    // ===== ВАЖНО: ОТРИСОВЫВАЕМ ГРАФИК =====
+    drawCapacityChart(capacityData);
+    
     // Добавляем обработчики для раскрытия деталей
     document.querySelectorAll('.sprint-row').forEach(row => {
         row.style.cursor = 'pointer';
         row.addEventListener('click', (e) => {
-            // Предотвращаем срабатывание если кликнули на ссылку внутри
             if (e.target.tagName === 'A') return;
-            
             const sprintId = row.dataset.sprintId;
             const detailsRow = document.querySelector(`.employee-details-row[data-sprint-id="${sprintId}"]`);
             if (detailsRow) {
@@ -490,4 +491,66 @@ function exportToCSV() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+}
+
+// Отрисовать график трудоемкости
+function drawCapacityChart(capacityData) {
+    console.log("📊 Отрисовка графика трудоемкости");
+    
+    const container = document.getElementById('chartContainer');
+    if (!container) {
+        console.log("❌ Контейнер для графика не найден");
+        return;
+    }
+    
+    if (!capacityData || !capacityData.sprints || capacityData.sprints.length === 0) {
+        container.innerHTML = '<div class="text-center">Нет данных для отображения графика</div>';
+        return;
+    }
+    
+    // Находим максимальное значение для масштабирования
+    const maxCapacity = Math.max(...capacityData.sprints.map(s => s.totalCapacity), 1);
+    
+    let html = '<div class="chart-bars">';
+    
+    // Показываем первые 20 спринтов для наглядности
+    const sprintsToShow = capacityData.sprints.slice(0, 20);
+    
+    sprintsToShow.forEach(sprint => {
+        const percent = (sprint.totalCapacity / maxCapacity) * 100;
+        const barColor = sprint.totalCapacity > 10 ? '#3498db' : '#e74c3c';
+        
+        html += `
+            <div class="chart-item">
+                <div class="chart-label" title="${sprint.startDate} - ${sprint.endDate}">
+                    ${sprint.name}
+                </div>
+                <div class="chart-bar-container">
+                    <div class="chart-bar" style="width: ${percent}%; background: linear-gradient(90deg, ${barColor}, ${barColor}dd);">
+                        <span class="chart-value">${sprint.totalCapacity}</span>
+                    </div>
+                </div>
+                <div class="chart-percent">${Math.round(percent)}%</div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    
+    // Добавляем легенду
+    html += `
+        <div class="chart-legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: #3498db;"></div>
+                <span>Высокая загрузка (>10 чел-дней)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #e74c3c;"></div>
+                <span>Низкая загрузка (≤10 чел-дней)</span>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    console.log("✅ График отрисован");
 }

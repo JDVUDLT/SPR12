@@ -16,16 +16,34 @@
                 <a href="/dashboard">Дашборд</a>
                 <a href="/sprints">Спринты</a>
                 <a href="/profile">Профиль</a>
-                <a href="#" id="logoutBtn">Выйти</a>
+                <a href="/login" id="logoutBtn">Выйти</a>
             </div>
         </div>
     </nav>
 
     <!-- Основной контент -->
     <div class="container">
-        <h1>Управление командой</h1>
-        
+    <!-- Блок поиска -->
+        <div class="search-bar">
+            <div class="form-row">
+                <div class="form-group half">
+                    <input type="text" id="searchEmployee" placeholder="🔍 Поиск сотрудников по имени..." class="search-input">
+                </div>
+                <div class="form-group half">
+                    <select id="filterRole" class="filter-select">
+                        <option value="">Все роли</option>
+                        <option value="developer">Разработчик</option>
+                        <option value="qa">Тестировщик</option>
+                        <option value="analyst">Аналитик</option>
+                        <option value="pm">Project Manager</option>
+                        <option value="designer">Дизайнер</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
         <!-- Секция выбора команды -->
+
         <div class="card">
             <div class="card-header">
                 <h2>Мои команды</h2>
@@ -51,6 +69,12 @@
                     <option value="">-- Выберите команду --</option>
                 </select>
             </div>
+        </div>
+
+        <h1>Управление командой</h1>
+        
+        <div class="card-header">
+            <h2>Сотрудники команды <span id="employeesCount" class="count-badge"></span></h2>
         </div>
 
         <!-- Секция сотрудников (показывается только когда выбрана команда) -->
@@ -149,6 +173,8 @@
         <h2>Отсутствия сотрудников</h2>
         <button class="btn btn-primary" id="showAddAbsenceBtn">+ Добавить отсутствие</button>
     </div>
+
+    <div id="paginationControls" class="pagination-controls" style="display: none;"></div>
 
     <!-- Форма добавления отсутствия (скрыта) -->
     <div id="addAbsenceForm" class="absence-form" style="display: none;">
