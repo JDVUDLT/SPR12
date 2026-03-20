@@ -1,14 +1,270 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPR</title>
+    <title>Управление командой</title>
+    <link rel="stylesheet" href="/css/style.css">
 </head>
-<body onload="Return()">
-    <a href="/login">Войти</a>
-    <a href="/registration">Зарег</a>
-    <a href="/dashboard">Дашборд</a>
-    <script src="/js/index.js"></script>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">SprintPlanner</a>
+            <div class="nav-links">
+                <a href="/" class="active">Главная</a>
+                <a href="/dashboard">Дашборд</a>
+                <a href="/sprints">Спринты</a>
+                <a href="/profile">Профиль</a>
+                <a href="#" id="logoutBtn">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Основной контент -->
+    <div class="container">
+        <h1>Управление командой</h1>
+        
+        <!-- Секция выбора команды -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Мои команды</h2>
+                <button class="btn btn-primary" id="showCreateTeamBtn">+ Новая команда</button>
+            </div>
+            
+            <!-- Форма создания команды (скрыта) -->
+            <div id="createTeamForm" class="employee-form" style="display: none;">
+                <h3>Создать новую команду</h3>
+                <div class="form-group">
+                    <label>Название команды:</label>
+                    <input type="text" id="teamName" placeholder="Например: Разработка фронтенда">
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" id="createTeamBtn">Создать</button>
+                    <button class="btn btn-secondary" id="cancelCreateTeamBtn">Отмена</button>
+                </div>
+            </div>
+            
+            <!-- Выбор команды -->
+            <div class="team-selector">
+                <select id="teamSelect">
+                    <option value="">-- Выберите команду --</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Секция сотрудников (показывается только когда выбрана команда) -->
+        <div id="employeeSection" style="display: none;">
+            <!-- Добавление сотрудника -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Сотрудники команды</h2>
+                    <button class="btn btn-primary" id="showAddEmployeeBtn">+ Добавить сотрудника</button>
+                </div>
+
+                <!-- Форма добавления сотрудника (скрыта) -->
+                <div id="addEmployeeForm" class="employee-form" style="display: none;">
+                    <h3>Новый сотрудник</h3>
+                    <div class="form-group">
+                        <label>ФИО:</label>
+                        <input type="text" id="empName" placeholder="Иванов Иван Иванович">
+                    </div>
+                    <div class="form-group">
+                        <label>Роль:</label>
+                        <select id="empRole">
+                            <option value="developer">Разработчик</option>
+                            <option value="qa">Тестировщик</option>
+                            <option value="analyst">Аналитик</option>
+                            <option value="pm">Project Manager</option>
+                            <option value="designer">Дизайнер</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Дата приема:</label>
+                        <input type="date" id="empHireDate">
+                    </div>
+                    <div class="form-actions">
+                        <button class="btn btn-primary" id="addEmployeeBtn">Сохранить</button>
+                        <button class="btn btn-secondary" id="cancelAddEmployeeBtn">Отмена</button>
+                    </div>
+                </div>
+                <!-- Форма редактирования сотрудника (скрыта) -->
+                <div id="editEmployeeForm" class="employee-form" style="display: none;">
+                    <h3>Редактирование сотрудника</h3>
+                    <input type="hidden" id="editEmpId">
+                    
+                    <div class="form-group">
+                        <label>ФИО:</label>
+                        <input type="text" id="editEmpName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Роль:</label>
+                        <select id="editEmpRole">
+                            <option value="developer">Разработчик</option>
+                            <option value="qa">Тестировщик</option>
+                            <option value="analyst">Аналитик</option>
+                            <option value="pm">Project Manager</option>
+                            <option value="designer">Дизайнер</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Дата приема:</label>
+                        <input type="date" id="editEmpHireDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Дата увольнения (если есть):</label>
+                        <input type="date" id="editEmpFireDate">
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button class="btn btn-primary" onclick="saveEmployeeEdit()">Сохранить</button>
+                        <button class="btn btn-secondary" onclick="cancelEditEmployee()">Отмена</button>
+                    </div>
+                </div>
+                <!-- Таблица сотрудников -->
+                <div class="table-container">
+                    <table class="table" id="employeesTable">
+                        <thead>
+                            <tr>
+                                <th>ФИО</th>
+                                <th>Роль</th>
+                                <th>Дата приема</th>
+                                <th>Статус</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesList">
+                            <tr>
+                                <td colspan="5" class="text-center">Выберите команду</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card">
+    <div class="card-header">
+        <h2>Отсутствия сотрудников</h2>
+        <button class="btn btn-primary" id="showAddAbsenceBtn">+ Добавить отсутствие</button>
+    </div>
+
+    <!-- Форма добавления отсутствия (скрыта) -->
+    <div id="addAbsenceForm" class="absence-form" style="display: none;">
+        <h3>Новое отсутствие</h3>
+        
+        <div class="form-group">
+            <label>Сотрудник:</label>
+            <select id="absenceEmployee">
+                <option value="">-- Выберите сотрудника --</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label>Тип отсутствия:</label>
+            <select id="absenceType">
+                <option value="vacation">Отпуск</option>
+                <option value="sick">Больничный</option>
+                <option value="dayoff">Отгул</option>
+                <option value="business">Командировка</option>
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group half">
+                <label>Дата начала:</label>
+                <input type="date" id="absenceStart">
+            </div>
+            <div class="form-group half">
+                <label>Дата окончания:</label>
+                <input type="date" id="absenceEnd">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Примечание (необязательно):</label>
+            <input type="text" id="absenceNote" placeholder="Например: Ежегодный отпуск">
+        </div>
+        
+        <div class="form-actions">
+            <button class="btn btn-primary" id="addAbsenceBtn">Сохранить</button>
+            <button class="btn btn-secondary" id="cancelAddAbsenceBtn">Отмена</button>
+        </div>
+    </div>
+    <!-- Форма редактирования отсутствия (скрыта) -->
+    <div id="editAbsenceForm" class="absence-form" style="display: none;">
+        <h3>Редактирование отсутствия</h3>
+        <input type="hidden" id="editAbsenceId">
+        
+        <div class="form-group">
+            <label>Сотрудник:</label>
+            <select id="editAbsenceEmployee" required></select>
+        </div>
+        
+        <div class="form-group">
+            <label>Тип отсутствия:</label>
+            <select id="editAbsenceType" required>
+                <option value="vacation">Отпуск</option>
+                <option value="sick">Больничный</option>
+                <option value="dayoff">Отгул</option>
+                <option value="business">Командировка</option>
+            </select>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group half">
+                <label>Дата начала:</label>
+                <input type="date" id="editAbsenceStart" required>
+            </div>
+            <div class="form-group half">
+                <label>Дата окончания:</label>
+                <input type="date" id="editAbsenceEnd" required>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label>Примечание:</label>
+            <input type="text" id="editAbsenceNote" placeholder="Например: Ежегодный отпуск">
+        </div>
+        
+        <div class="form-actions">
+            <button class="btn btn-primary" onclick="saveAbsenceEdit()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="cancelEditAbsence()">Отмена</button>
+        </div>
+    </div>
+
+    <!-- Таблица отсутствий -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Сотрудник</th>
+                    <th>Тип</th>
+                    <th>Период</th>
+                    <th>Дней</th>
+                    <th>Примечание</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="absencesList">
+                <tr>
+                    <td colspan="6" class="text-center">Нет данных об отсутствиях</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+        </div>
+        
+        <!-- Блок для сообщений -->
+        <div id="message" class="message"></div>
+    </div>
+
+    <!-- Подключаем скрипты -->
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/team.js"></script>
 </body>
 </html>

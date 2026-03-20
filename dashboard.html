@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дашборд - Карта трудоемкости</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">SprintPlanner</a>
+            <div class="nav-links">
+                <a href="/">Главная</a>
+                <a href="/dashboard" class="active">Дашборд</a>
+                <a href="/sprints">Спринты</a>
+                <a href="/profile">Профиль</a>
+                <a href="#" id="logoutBtn">Выйти</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>📊 Карта трудоемкости команды</h1>
+        
+        <!-- Фильтры -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Фильтры</h2>
+            </div>
+            <div class="form-row">
+                <div class="form-group half">
+                    <label>Выберите команду:</label>
+                    <select id="teamSelect">
+                        <option value="">-- Выберите команду --</option>
+                    </select>
+                </div>
+                <div class="form-group half">
+                    <label>Год:</label>
+                    <select id="yearSelect"></select>
+                </div>
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="refreshBtn">🔄 Обновить</button>
+                <button class="btn btn-secondary" id="exportBtn">📎 Экспорт в CSV</button>
+            </div>
+        </div>
+
+        <!-- Секция с данными -->
+        <div id="capacitySection" style="display: none;">
+            <!-- Сводная статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="statTotalCapacity">0</div>
+                    <div class="stat-label">Всего человеко-дней</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statAvgCapacity">0</div>
+                    <div class="stat-label">Среднее на спринт</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statEmployees">0</div>
+                    <div class="stat-label">Сотрудников</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="statSprints">0</div>
+                    <div class="stat-label">Спринтов</div>
+                </div>
+            </div>
+
+            <!-- Таблица трудоемкости -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>Трудоемкость по спринтам</h2>
+                    <small class="hint">Нажмите на спринт для детализации</small>
+                </div>
+                <div class="table-container">
+                    <table class="capacity-table" id="capacityTable">
+                        <thead>
+                            <tr>
+                                <th>Спринт</th>
+                                <th>Период</th>
+                                <th>Рабочих дней</th>
+                                <th>Доступно чел-дней</th>
+                                <th>Загрузка</th>
+                            </tr>
+                        </thead>
+                        <tbody id="capacityTableBody">
+                            <tr>
+                                <td colspan="5" class="text-center">Выберите команду для отображения данных</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Блок для сообщений -->
+        <div id="message" class="message"></div>
+    </div>
+
+    <!-- Подключаем скрипты -->
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+</html>
