@@ -11,42 +11,6 @@ app.use(express.static(path.join(__dirname)));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 
-const initDataFiles = async () => {
-    const files = ['Users.json', 'teams.json', 'employees.json', 'absences.json', 'sprints.json', 'holidays.json', 'settings.json'];
-    
-    for (const file of files) {
-        if (!await fs.pathExists(file)) {
-            await fs.writeJSON(file, []);
-            console.log(`📁 Создан файл: ${file}`);
-        }
-    }
-};
-
-initDataFiles().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ Сервер запущен на порту ${PORT}`);
-    });
-}).catch(err => {
-    console.error('❌ Ошибка инициализации:', err);
-});
-
-const readJSON = async (filename) => {
-    try {
-        return await fs.readJSON(filename);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            // Если файл не существует, создаем пустой массив
-            await fs.writeJSON(filename, []);
-            return [];
-        }
-        throw error;
-    }
-};
-
-const writeJSON = async (filename, data) => {
-    await fs.writeJSON(filename, data, { spaces: 4 });
-};
-
 // ===== МАРШРУТЫ ДЛЯ СТРАНИЦ =====
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
@@ -831,16 +795,6 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-
-const server = app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`✅ Сервер запущен на порту ${PORT}`);
-});
-
-// Обработка завершения
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, closing server...');
-    server.close(() => {
-        console.log('Server closed');
-        process.exit(0);
-    });
 });
