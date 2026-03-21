@@ -2,8 +2,25 @@
 const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
-
 const app = express();
+const initFiles = async () => {
+    const files = ['Users.json', 'teams.json', 'employees.json', 'absences.json', 'sprints.json', 'holidays.json', 'settings.json'];
+    
+    for (const file of files) {
+        try {
+            if (!await fs.pathExists(file)) {
+                await fs.writeJSON(file, []);
+                console.log(`📁 Создан файл: ${file}`);
+            }
+        } catch (err) {
+            console.error(`❌ Ошибка при создании ${file}:`, err.message);
+        }
+    }
+    console.log("✅ Все файлы инициализированы");
+};
+
+// Вызываем перед запуском
+initFiles();
 
 // ===== MIDDLEWARE =====
 app.use(express.json()); 
@@ -152,14 +169,21 @@ app.post("/sendDataLogin", async (req, res) => {
 
 // ===== КОМАНДЫ =====
 
-// Получить все команды
 app.get('/api/teams', async (req, res) => {
+    console.log("📋 Запрос списка команд");
+    
     try {
-        console.log("📋 Запрос списка команд");
-        const teams = await readJSON('teams.json');
+        // Проверяем существование файла
+        if (!await fs.pathExists('teams.json')) {
+            await fs.writeJSON('teams.json', []);
+        }
+        
+        const teams = await fs.readJSON('teams.json');
+        console.log(`📋 Загружено команд: ${teams.length}`);
         res.json(teams);
+        
     } catch (error) {
-        console.error("❌ Ошибка получения команд:", error);
+        console.error("❌ Ошибка:", error);
         res.status(500).json({ error: error.message });
     }
 });

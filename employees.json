@@ -1,20 +1,2 @@
 [
-    {
-        "id": "1773935490037",
-        "teamId": "1773934743698",
-        "fullName": "Витя",
-        "role": "developer",
-        "hireDate": "2026-03-19",
-        "fireDate": null,
-        "createdAt": "2026-03-19T15:51:30.037Z"
-    },
-    {
-        "id": "1774025711870",
-        "teamId": "1773934743698",
-        "fullName": "Петя",
-        "role": "qa",
-        "hireDate": "2026-03-20",
-        "fireDate": null,
-        "createdAt": "2026-03-20T16:55:11.870Z"
-    }
 ]
