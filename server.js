@@ -3,24 +3,6 @@ const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 const app = express();
-const initFiles = async () => {
-    const files = ['Users.json', 'teams.json', 'employees.json', 'absences.json', 'sprints.json', 'holidays.json', 'settings.json'];
-    
-    for (const file of files) {
-        try {
-            if (!await fs.pathExists(file)) {
-                await fs.writeJSON(file, []);
-                console.log(`📁 Создан файл: ${file}`);
-            }
-        } catch (err) {
-            console.error(`❌ Ошибка при создании ${file}:`, err.message);
-        }
-    }
-    console.log("✅ Все файлы инициализированы");
-};
-
-// Вызываем перед запуском
-initFiles();
 
 // ===== MIDDLEWARE =====
 app.use(express.json()); 
@@ -190,15 +172,23 @@ app.get('/api/teams', async (req, res) => {
 
 // Создать новую команду
 app.post('/api/teams', async (req, res) => {
+    console.log("📋 POST /api/teams вызван");
+    console.log("📦 Тело запроса:", req.body);
+    
     try {
-        console.log("📋 Создание новой команды:", req.body);
         const { name, userId } = req.body;
         
         if (!name || !userId) {
+            console.log("❌ Ошибка: нет name или userId");
             return res.status(400).json({ error: "Название команды и ID пользователя обязательны" });
         }
         
-        const teams = await readJSON('teams.json');
+        // Проверяем существование файла
+        if (!await fs.pathExists('teams.json')) {
+            await fs.writeJSON('teams.json', []);
+        }
+        
+        const teams = await fs.readJSON('teams.json');
         
         const newTeam = {
             id: Date.now().toString(),
@@ -208,10 +198,11 @@ app.post('/api/teams', async (req, res) => {
         };
         
         teams.push(newTeam);
-        await writeJSON('teams.json', teams);
+        await fs.writeJSON('teams.json', teams, { spaces: 4 });
         
         console.log("✅ Команда создана:", newTeam);
         res.json(newTeam);
+        
     } catch (error) {
         console.error("❌ Ошибка создания команды:", error);
         res.status(500).json({ error: error.message });
@@ -222,7 +213,7 @@ app.post('/api/teams', async (req, res) => {
 app.get('/api/teams/user/:userId', async (req, res) => {
     try {
         console.log(`📋 Запрос команд пользователя: ${req.params.userId}`);
-        const teams = await readJSON('teams.json');
+        const teams = await fs.readJSON('teams.json');
         const userTeams = teams.filter(t => t.ownerId === req.params.userId);
         res.json(userTeams);
     } catch (error) {
@@ -235,11 +226,25 @@ app.get('/api/teams/user/:userId', async (req, res) => {
 
 // Получить сотрудников команды
 app.get('/api/employees/:teamId', async (req, res) => {
+    console.log(`📋 GET /api/employees/${req.params.teamId} вызван`);
+    
     try {
-        console.log(`📋 Запрос сотрудников команды: ${req.params.teamId}`);
-        const employees = await readJSON('employees.json');
-        const teamEmployees = employees.filter(e => e.teamId === req.params.teamId);
+        const teamId = req.params.teamId;
+        
+        // Проверяем существование файла
+        if (!await fs.pathExists('employees.json')) {
+            await fs.writeJSON('employees.json', []);
+            console.log("📁 Создан employees.json");
+        }
+        
+        const employees = await fs.readJSON('employees.json');
+        console.log(`📋 Всего сотрудников в файле: ${employees.length}`);
+        
+        const teamEmployees = employees.filter(e => e.teamId === teamId);
+        console.log(`📋 Сотрудников для команды ${teamId}: ${teamEmployees.length}`);
+        
         res.json(teamEmployees);
+        
     } catch (error) {
         console.error("❌ Ошибка получения сотрудников:", error);
         res.status(500).json({ error: error.message });
@@ -248,16 +253,34 @@ app.get('/api/employees/:teamId', async (req, res) => {
 
 // Добавить сотрудника
 app.post('/api/employees', async (req, res) => {
+    console.log("📋 POST /api/employees вызван");
+    console.log("📦 Тело запроса:", req.body);
+    
     try {
-        console.log("📋 Добавление сотрудника:", req.body);
         const { teamId, fullName, role, hireDate } = req.body;
         
+        // Проверка обязательных полей
         if (!teamId || !fullName || !role || !hireDate) {
-            return res.status(400).json({ error: "Все поля обязательны" });
+            console.log("❌ Отсутствуют обязательные поля");
+            return res.status(400).json({ 
+                error: "Все поля обязательны",
+                received: { teamId, fullName, role, hireDate }
+            });
         }
         
-        const employees = await readJSON('employees.json');
+        // Проверяем существование файла
+        const fs = require('fs-extra');
+        const filePath = 'employees.json';
         
+        if (!await fs.pathExists(filePath)) {
+            await fs.writeJSON(filePath, []);
+            console.log("📁 Создан файл employees.json");
+        }
+        
+        const employees = await fs.readJSON(filePath);
+        console.log(`📋 Текущее количество сотрудников: ${employees.length}`);
+        
+        // Создаем нового сотрудника
         const newEmployee = {
             id: Date.now().toString(),
             teamId: teamId,
@@ -269,34 +292,40 @@ app.post('/api/employees', async (req, res) => {
         };
         
         employees.push(newEmployee);
-        await writeJSON('employees.json', employees);
+        await fs.writeJSON('employees.json', employees, { spaces: 4 });
         
         console.log("✅ Сотрудник добавлен:", newEmployee);
         res.json(newEmployee);
+        
     } catch (error) {
         console.error("❌ Ошибка добавления сотрудника:", error);
-        res.status(500).json({ error: error.message });
+        console.error("❌ Stack:", error.stack);
+        res.status(500).json({ 
+            error: error.message,
+            stack: error.stack 
+        });
     }
 });
 
 // Обновить сотрудника
 app.put('/api/employees/:id', async (req, res) => {
     try {
-        console.log(`📋 Обновление сотрудника ${req.params.id}:`, req.body);
-        const employees = await readJSON('employees.json');
-        const index = employees.findIndex(e => e.id === req.params.id);
+        const id = req.params.id;
+        const updateData = req.body;
+        
+        const employees = await fs.readJSON('employees.json');
+        const index = employees.findIndex(e => e.id === id);
         
         if (index === -1) {
             return res.status(404).json({ error: "Сотрудник не найден" });
         }
         
-        employees[index] = { ...employees[index], ...req.body };
-        await writeJSON('employees.json', employees);
+        employees[index] = { ...employees[index], ...updateData };
+        await fs.writeJSON('employees.json', employees, { spaces: 4 });
         
-        console.log("✅ Сотрудник обновлен:", employees[index]);
         res.json(employees[index]);
+        
     } catch (error) {
-        console.error("❌ Ошибка обновления сотрудника:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -305,14 +334,14 @@ app.put('/api/employees/:id', async (req, res) => {
 app.delete('/api/employees/:id', async (req, res) => {
     try {
         console.log(`📋 Удаление сотрудника: ${req.params.id}`);
-        const employees = await readJSON('employees.json');
+        const employees = await fs.readJSON('employees.json');
         const filtered = employees.filter(e => e.id !== req.params.id);
         
         if (filtered.length === employees.length) {
             return res.status(404).json({ error: "Сотрудник не найден" });
         }
         
-        await writeJSON('employees.json', filtered);
+        await fs.writeJSON('employees.json', filtered, { spaces: 4 });
         console.log("✅ Сотрудник удален");
         res.json({ success: true });
     } catch (error) {
@@ -325,20 +354,33 @@ app.delete('/api/employees/:id', async (req, res) => {
 
 // Получить отсутствия команды
 app.get('/api/absences/:teamId', async (req, res) => {
+    console.log(`📋 GET /api/absences/${req.params.teamId} вызван`);
+    
     try {
-        console.log(`📋 Запрос отсутствий команды: ${req.params.teamId}`);
-        const absences = await readJSON('absences.json');
-        const employees = await readJSON('employees.json');
+        const teamId = req.params.teamId;
+        
+        // Проверяем существование файлов
+        if (!await fs.pathExists('absences.json')) {
+            await fs.writeJSON('absences.json', [], { spaces: 4 });
+        }
+        if (!await fs.pathExists('employees.json')) {
+            await fs.writeJSON('employees.json', [], { spaces: 4 });
+        }
+        
+        const absences = await fs.readJSON('absences.json');
+        const employees = await fs.readJSON('employees.json');
         
         // Получаем ID всех сотрудников команды
         const teamEmployeeIds = employees
-            .filter(e => e.teamId === req.params.teamId)
+            .filter(e => e.teamId === teamId)
             .map(e => e.id);
         
         // Фильтруем отсутствия только для этих сотрудников
         const teamAbsences = absences.filter(a => teamEmployeeIds.includes(a.employeeId));
         
+        console.log(`📋 Найдено отсутствий: ${teamAbsences.length}`);
         res.json(teamAbsences);
+        
     } catch (error) {
         console.error("❌ Ошибка получения отсутствий:", error);
         res.status(500).json({ error: error.message });
@@ -347,15 +389,31 @@ app.get('/api/absences/:teamId', async (req, res) => {
 
 // Добавить отсутствие
 app.post('/api/absences', async (req, res) => {
+    console.log("📋 POST /api/absences вызван");
+    console.log("📦 Тело запроса:", req.body);
+    
     try {
-        console.log("📋 Добавление отсутствия:", req.body);
-        const { employeeId, type, startDate, endDate } = req.body;
+        const { employeeId, type, startDate, endDate, note } = req.body;
         
+        // Валидация
         if (!employeeId || !type || !startDate || !endDate) {
+            console.log("❌ Ошибка: не все поля заполнены");
             return res.status(400).json({ error: "Все поля обязательны" });
         }
         
-        const absences = await readJSON('absences.json');
+        // Проверяем валидность дат
+        if (new Date(startDate) > new Date(endDate)) {
+            console.log("❌ Ошибка: дата начала позже даты окончания");
+            return res.status(400).json({ error: "Дата начала не может быть позже даты окончания" });
+        }
+        
+        // Проверяем существование файла
+        if (!await fs.pathExists('absences.json')) {
+            await fs.writeJSON('absences.json', [], { spaces: 4 });
+            console.log("📁 Создан файл absences.json");
+        }
+        
+        const absences = await fs.readJSON('absences.json');
         
         const newAbsence = {
             id: Date.now().toString(),
@@ -363,34 +421,66 @@ app.post('/api/absences', async (req, res) => {
             type: type,
             startDate: startDate,
             endDate: endDate,
+            note: note || '',
             createdAt: new Date().toISOString()
         };
         
         absences.push(newAbsence);
-        await writeJSON('absences.json', absences);
+        await fs.writeJSON('absences.json', absences, { spaces: 4 });
         
         console.log("✅ Отсутствие добавлено:", newAbsence);
         res.json(newAbsence);
+        
     } catch (error) {
         console.error("❌ Ошибка добавления отсутствия:", error);
+        console.error("❌ Stack:", error.stack);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Обновить отсутствие
+app.put('/api/absences/:id', async (req, res) => {
+    try {
+        const absences = await fs.readJSON('absences.json');
+        const index = absences.findIndex(a => a.id === req.params.id);
+        
+        if (index === -1) {
+            return res.status(404).json({ error: "Отсутствие не найдено" });
+        }
+        
+        absences[index] = { ...absences[index], ...req.body };
+        await fs.writeJSON('absences.json', absences, { spaces: 4 });
+        
+        res.json(absences[index]);
+        
+    } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
 // Удалить отсутствие
 app.delete('/api/absences/:id', async (req, res) => {
+    console.log(`📋 DELETE /api/absences/${req.params.id} вызван`);
+    
     try {
-        console.log(`📋 Удаление отсутствия: ${req.params.id}`);
-        const absences = await readJSON('absences.json');
-        const filtered = absences.filter(a => a.id !== req.params.id);
+        const id = req.params.id;
+        
+        if (!await fs.pathExists('absences.json')) {
+            return res.status(404).json({ error: "Файл отсутствий не найден" });
+        }
+        
+        const absences = await fs.readJSON('absences.json');
+        const filtered = absences.filter(a => a.id !== id);
         
         if (filtered.length === absences.length) {
             return res.status(404).json({ error: "Отсутствие не найдено" });
         }
         
-        await writeJSON('absences.json', filtered);
+        await fs.writeJSON('absences.json', filtered, { spaces: 4 });
+        
         console.log("✅ Отсутствие удалено");
         res.json({ success: true });
+        
     } catch (error) {
         console.error("❌ Ошибка удаления отсутствия:", error);
         res.status(500).json({ error: error.message });
@@ -401,26 +491,36 @@ app.delete('/api/absences/:id', async (req, res) => {
 
 // Получить настройки команды
 app.get('/api/settings/:teamId', async (req, res) => {
+    console.log(`📋 GET /api/settings/${req.params.teamId}`);
+    
     try {
-        console.log(`📋 Запрос настроек для команды: ${req.params.teamId}`);
-        const settings = await readJSON('settings.json');
+        const filePath = 'settings.json';
         
-        // Ищем настройки для конкретной команды
+        if (!await fs.pathExists(filePath)) {
+            console.log("📁 Файл settings.json не найден, создаем");
+            await fs.writeJSON(filePath, [], { spaces: 4 });
+        }
+        
+        const settings = await fs.readJSON(filePath);
+        console.log(`📋 Всего настроек: ${settings.length}`);
+        
         const teamSettings = settings.find(s => s.teamId === req.params.teamId);
         
         if (teamSettings) {
+            console.log("✅ Настройки найдены");
             res.json(teamSettings);
         } else {
-            // Возвращаем настройки по умолчанию
+            console.log("⚠️ Настройки не найдены, возвращаем значения по умолчанию");
             res.json({
                 teamId: req.params.teamId,
                 duration: 14,
-                firstStart: getDefaultStartDate(),
+                firstStart: new Date().toISOString().split('T')[0],
                 coefficient: 1.0
             });
         }
+        
     } catch (error) {
-        console.error("❌ Ошибка получения настроек:", error);
+        console.error("❌ Ошибка:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -428,36 +528,25 @@ app.get('/api/settings/:teamId', async (req, res) => {
 // Сохранить настройки команды
 app.post('/api/settings/:teamId', async (req, res) => {
     try {
-        console.log(`📋 Сохранение настроек для команды: ${req.params.teamId}`, req.body);
-        const { duration, firstStart, coefficient } = req.body;
-        const teamId = req.params.teamId;
+        const settings = await fs.readJSON('settings.json');
+        const index = settings.findIndex(s => s.teamId === req.params.teamId);
         
-        if (!duration || !firstStart) {
-            return res.status(400).json({ error: "Не все поля заполнены" });
-        }
-        
-        const settings = await readJSON('settings.json');
-        
-        // Удаляем старые настройки этой команды
-        const otherSettings = settings.filter(s => s.teamId !== teamId);
-        
-        // Добавляем новые
         const newSettings = {
-            teamId: teamId,
-            duration: duration,
-            firstStart: firstStart,
-            coefficient: coefficient || 1.0,
+            teamId: req.params.teamId,
+            ...req.body,
             updatedAt: new Date().toISOString()
         };
         
-        otherSettings.push(newSettings);
-        await writeJSON('settings.json', otherSettings);
+        if (index === -1) {
+            settings.push(newSettings);
+        } else {
+            settings[index] = newSettings;
+        }
         
-        console.log("✅ Настройки сохранены");
+        await fs.writeJSON('settings.json', settings, { spaces: 4 });
         res.json(newSettings);
         
     } catch (error) {
-        console.error("❌ Ошибка сохранения настроек:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -465,12 +554,13 @@ app.post('/api/settings/:teamId', async (req, res) => {
 // Получить спринты команды
 app.get('/api/sprints/:teamId', async (req, res) => {
     try {
-        console.log(`📋 Запрос спринтов для команды: ${req.params.teamId}`);
-        const sprints = await readJSON('sprints.json');
+        if (!await fs.pathExists('sprints.json')) {
+            await fs.writeJSON('sprints.json', []);
+        }
+        const sprints = await fs.readJSON('sprints.json', { spaces: 4 });
         const teamSprints = sprints.filter(s => s.teamId === req.params.teamId);
         res.json(teamSprints);
     } catch (error) {
-        console.error("❌ Ошибка получения спринтов:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -479,82 +569,49 @@ app.get('/api/sprints/:teamId', async (req, res) => {
 
 // Сгенерировать спринты 
 app.post('/api/sprints/generate/:teamId', async (req, res) => {
-    console.log("=".repeat(50));
-    console.log("🔥 ГЕНЕРАЦИЯ СПРИНТОВ");
-    console.log("📌 teamId:", req.params.teamId);
-    console.log("📌 body:", req.body);
-    console.log("=".repeat(50));
+    console.log("🔥 POST /api/sprints/generate/:teamId");
+    console.log("teamId:", req.params.teamId);
+    console.log("body:", req.body);
     
     try {
         const { duration, firstStart } = req.body;
         const teamId = req.params.teamId;
         
-        if (!duration || !firstStart) {
-            return res.status(400).json({ error: "Не указаны параметры" });
-        }
-        
-        // Читаем существующие спринты
-        const sprints = await readJSON('sprints.json');
-        
-        // Удаляем старые спринты этой команды
-        const otherSprints = sprints.filter(s => s.teamId !== teamId);
-        
-        // Генерируем новые спринты
         const startDate = new Date(firstStart);
-        const endOfYear = new Date(startDate.getFullYear(), 11, 31); // 31 декабря
-        
-        console.log(`📅 Начало: ${startDate.toISOString().split('T')[0]}`);
-        console.log(`📅 Конец года: ${endOfYear.toISOString().split('T')[0]}`);
+        const endOfYear = new Date(startDate.getFullYear(), 11, 31);
         
         let newSprints = [];
         let currentStart = new Date(startDate);
         let sprintNumber = 1;
         
-        // Защита от бесконечного цикла
-        const MAX_SPRINTS = 53; // Максимум недель в году
-        
-        while (currentStart <= endOfYear && sprintNumber <= MAX_SPRINTS) {
-            // Вычисляем дату окончания спринта
+        while (currentStart <= endOfYear && sprintNumber <= 52) {
             let currentEnd = new Date(currentStart);
             currentEnd.setDate(currentEnd.getDate() + duration - 1);
-            
-            // Если вышли за конец года, обрезаем
-            if (currentEnd > endOfYear) {
-                currentEnd = new Date(endOfYear);
-            }
-            
-            // Форматируем даты
-            const startStr = currentStart.toISOString().split('T')[0];
-            const endStr = currentEnd.toISOString().split('T')[0];
-            
-            console.log(`   Спринт ${sprintNumber}: ${startStr} - ${endStr}`);
+            if (currentEnd > endOfYear) currentEnd = new Date(endOfYear);
             
             newSprints.push({
                 id: `${teamId}_sprint_${Date.now()}_${sprintNumber}`,
                 teamId: teamId,
                 name: `Спринт ${sprintNumber}`,
-                startDate: startStr,
-                endDate: endStr,
-                workingDays: 0 // Пока 0, потом пересчитаем
+                startDate: currentStart.toISOString().split('T')[0],
+                endDate: currentEnd.toISOString().split('T')[0],
+                workingDays: 0
             });
             
-            // Переходим к следующему спринту (начинаем на следующий день после окончания)
             currentStart = new Date(currentEnd);
             currentStart.setDate(currentStart.getDate() + 1);
             sprintNumber++;
         }
         
+        const sprints = await fs.readJSON('sprints.json');
+        const otherSprints = sprints.filter(s => s.teamId !== teamId);
+        await fs.writeJSON('sprints.json', [...otherSprints, ...newSprints], { spaces: 4 });
+        
         console.log(`✅ Сгенерировано ${newSprints.length} спринтов`);
-        
-        // Сохраняем все спринты
-        const allSprints = [...otherSprints, ...newSprints];
-        await writeJSON('sprints.json', allSprints);
-        
-        // Отправляем ответ
         res.json(newSprints);
         
     } catch (error) {
-        console.error("❌ Ошибка:", error);
+        console.error("❌ Ошибка:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
@@ -564,12 +621,13 @@ app.post('/api/sprints/generate/:teamId', async (req, res) => {
 // Получить праздники команды
 app.get('/api/holidays/:teamId', async (req, res) => {
     try {
-        console.log(`📋 Запрос праздников для команды: ${req.params.teamId}`);
-        const holidays = await readJSON('holidays.json');
+        if (!await fs.pathExists('holidays.json')) {
+            await fs.writeJSON('holidays.json', []);
+        }
+        const holidays = await fs.readJSON('holidays.json');
         const teamHolidays = holidays.filter(h => h.teamId === req.params.teamId);
         res.json(teamHolidays);
     } catch (error) {
-        console.error("❌ Ошибка получения праздников:", error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -585,7 +643,7 @@ app.post('/api/holidays/:teamId', async (req, res) => {
             return res.status(400).json({ error: "Дата обязательна" });
         }
         
-        const holidays = await readJSON('holidays.json');
+        const holidays = await fs.readJSON('holidays.json');
         
         const newHoliday = {
             id: `${teamId}_holiday_${Date.now()}`,
@@ -596,7 +654,7 @@ app.post('/api/holidays/:teamId', async (req, res) => {
         };
         
         holidays.push(newHoliday);
-        await writeJSON('holidays.json', holidays);
+        await fs.writeJSON('holidays.json', holidays);
         
         console.log("✅ Праздник добавлен");
         res.json(newHoliday);
@@ -611,14 +669,14 @@ app.post('/api/holidays/:teamId', async (req, res) => {
 app.delete('/api/holidays/:id', async (req, res) => {
     try {
         console.log(`📋 Удаление праздника: ${req.params.id}`);
-        const holidays = await readJSON('holidays.json');
+        const holidays = await fs.readJSON('holidays.json');
         const filtered = holidays.filter(h => h.id !== req.params.id);
         
         if (filtered.length === holidays.length) {
             return res.status(404).json({ error: "Праздник не найден" });
         }
         
-        await writeJSON('holidays.json', filtered);
+        await fs.writeJSON('holidays.json', filtered);
         console.log("✅ Праздник удален");
         res.json({ success: true });
         
@@ -662,11 +720,11 @@ app.post('/api/sprints/calculate-days/:teamId', async (req, res) => {
         const teamId = req.params.teamId;
         
         // Получаем все спринты команды
-        const sprints = await readJSON('sprints.json');
+        const sprints = await fs.readJSON('sprints.json');
         const teamSprints = sprints.filter(s => s.teamId === teamId);
         
         // Получаем все праздники команды
-        const holidays = await readJSON('holidays.json');
+        const holidays = await fs.readJSON('holidays.json');
         const teamHolidays = holidays.filter(h => h.teamId === teamId);
         
         // Обновляем рабочие дни для каждого спринта
@@ -681,7 +739,7 @@ app.post('/api/sprints/calculate-days/:teamId', async (req, res) => {
         // Сохраняем обновленные спринты
         const otherSprints = sprints.filter(s => s.teamId !== teamId);
         const allSprints = [...otherSprints, ...teamSprints];
-        await writeJSON('sprints.json', allSprints);
+        await fs.writeJSON('sprints.json', allSprints, { spaces: 4 });
         
         console.log(`✅ Пересчитаны рабочие дни для ${teamSprints.length} спринтов`);
         res.json(teamSprints);
@@ -698,11 +756,11 @@ app.post('/api/sprints/calculate-days/:teamId', async (req, res) => {
         const teamId = req.params.teamId;
         
         // Получаем все спринты команды
-        const sprints = await readJSON('sprints.json');
+        const sprints = await fs.readJSON('sprints.json');
         const teamSprints = sprints.filter(s => s.teamId === teamId);
         
         // Получаем все праздники
-        const holidays = await readJSON('holidays.json');
+        const holidays = await fs.readJSON('holidays.json');
         const teamHolidays = holidays.filter(h => h.teamId === teamId);
         
         // Создаем Set с праздничными датами для быстрого поиска
@@ -736,7 +794,7 @@ app.post('/api/sprints/calculate-days/:teamId', async (req, res) => {
         // Сохраняем обновленные спринты
         const otherSprints = sprints.filter(s => s.teamId !== teamId);
         const allSprints = [...otherSprints, ...teamSprints];
-        await writeJSON('sprints.json', allSprints);
+        await fs.writeJSON('sprints.json', allSprints, { spaces: 4 });
         
         console.log(`✅ Рассчитаны рабочие дни для ${teamSprints.length} спринтов`);
         res.json(teamSprints);
@@ -766,7 +824,7 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
         const { teamId } = req.params;
         const { year } = req.body;
         
-        const sprints = await readJSON('sprints.json');
+        const sprints = await fs.readJSON('sprints.json');
         
         // Находим спринты за прошлый год
         const lastYearSprints = sprints.filter(s => 
@@ -802,7 +860,7 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
         });
         
         const allSprints = [...otherSprints, ...newSprints];
-        await writeJSON('sprints.json', allSprints);
+        await fs.writeJSON('sprints.json', allSprints, { spaces: 4 });
         
         res.json({ success: true, count: newSprints.length });
         
@@ -810,6 +868,11 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
         console.error('❌ Ошибка копирования спринтов:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+app.post('/api/test', (req, res) => {
+    console.log("✅ Тестовый маршрут сработал!");
+    res.json({ success: true, received: req.body });
 });
 
 const PORT = process.env.PORT || 3000;
