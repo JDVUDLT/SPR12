@@ -111,48 +111,42 @@ app.post("/sendDataRegistration", async (req, res) => {
 
 // ВХОД
 app.post("/sendDataLogin", async (req, res) => {
-    console.log("Получен запрос на вход:", req.body.log);
+    console.log("🔐 ПОЛУЧЕН ЗАПРОС НА ВХОД");
+    console.log("📦 Тело запроса:", req.body);
     
     try {
         const { log, pass } = req.body;
         
         if (!log || !pass) {
-            return res.json({ 
-                msg: "Логин и пароль обязательны",
-                success: false 
-            });
+            return res.json({ success: false, msg: "Логин и пароль обязательны" });
         }
         
-        const users = await readJSON("Users.json");
+        // Проверяем существование файла
+        if (!await fs.pathExists("Users.json")) {
+            await fs.writeJSON("Users.json", []);
+            console.log("📁 Создан Users.json");
+        }
         
-        // Ищем пользователя
+        const users = await fs.readJSON("Users.json");
+        console.log(`📋 В файле ${users.length} пользователей`);
+        
         const user = users.find(u => u.log === log && u.pass === pass);
         
         if (user) {
-            // Успешный вход
+            console.log(`✅ Успешный вход: ${log}`);
             res.json({
                 success: true,
                 msg: "Вы успешно вошли",
-                user: {
-                    id: user.id,
-                    name: user.name,
-                    log: user.log
-                }
+                user: { id: user.id, name: user.name, log: user.log, email: user.email }
             });
         } else {
-            // Неуспешный вход
-            res.json({
-                success: false,
-                msg: "Неверный логин или пароль"
-            });
+            console.log(`❌ Неудачный вход: ${log}`);
+            res.json({ success: false, msg: "Неверный логин или пароль" });
         }
         
     } catch (error) {
-        console.error("Ошибка входа:", error);
-        res.json({ 
-            msg: "Ошибка сервера",
-            success: false 
-        });
+        console.error("❌ Ошибка:", error);
+        res.json({ success: false, msg: "Ошибка сервера: " + error.message });
     }
 });
 
