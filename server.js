@@ -4,7 +4,6 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const app = express();
-
 const PORT = process.env.PORT || 3000;
 
 // Проверяем, что сервер не запущен дважды
@@ -851,9 +850,4 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
         console.error('❌ Ошибка копирования спринтов:', error);
         res.status(500).json({ success: false, error: error.message });
     }
-});
-
-// ===== ЗАПУСК СЕРВЕРА =====
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`✅ Сервер запущен на порту ${PORT}`);
 });
