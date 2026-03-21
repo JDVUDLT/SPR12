@@ -4,28 +4,6 @@ const fs = require('fs-extra');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-// Проверяем, что сервер не запущен дважды
-if (!process.env.IS_RENDER || process.env.NODE_ENV === 'development') {
-    app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ Сервер запущен на порту ${PORT}`);
-        console.log(`📌 Адрес: http://localhost:${PORT}`);
-    });
-} else {
-    // Для production (Render)
-    const server = app.listen(PORT, '0.0.0.0', () => {
-        console.log(`✅ Сервер запущен на порту ${PORT}`);
-    });
-    
-    // Обработка завершения
-    process.on('SIGTERM', () => {
-        console.log('SIGTERM signal received: closing HTTP server');
-        server.close(() => {
-            console.log('HTTP server closed');
-        });
-    });
-} 
 
 // ===== MIDDLEWARE =====
 app.use(express.json()); 
@@ -850,4 +828,19 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
         console.error('❌ Ошибка копирования спринтов:', error);
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+const PORT = process.env.PORT || 3000;
+
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Сервер запущен на порту ${PORT}`);
+});
+
+// Обработка завершения
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, closing server...');
+    server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+    });
 });
