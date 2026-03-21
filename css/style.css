@@ -1842,3 +1842,377 @@ h1:before {
 .search-result-info .result-icon {
     font-size: 16px;
 }
+
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+    transform: translateY(-2px);
+}
+
+/* Кнопка увольнения (оранжевая) */
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+/* Кнопка восстановления (зеленая) */
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* Кнопка редактирования (синяя) */
+.btn-edit {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* Кнопка удаления (красная) */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* Общие стили для маленьких кнопок */
+.btn-small {
+    padding: 6px 10px;
+    margin: 0 3px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-small:active {
+    transform: translateY(0);
+}
+
+/* Ячейка с действиями */
+.actions-cell {
+    white-space: nowrap;
+    min-width: 110px;
+}
+
+/* Кнопка увольнения (оранжевая) */
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+}
+
+/* Кнопка восстановления (зеленая) */
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3);
+}
+
+/* Кнопка редактирования (синяя) */
+.btn-edit {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+/* Кнопка удаления (красная) */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+}
+
+/* Общие стили для маленьких кнопок */
+.btn-small {
+    padding: 6px 10px;
+    margin: 0 3px;
+    font-size: 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-small:active {
+    transform: translateY(0);
+}
+
+/* Ячейка с действиями */
+.actions-cell {
+    white-space: nowrap;
+    min-width: 110px;
+}
+.btn-small {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 0 2px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-small:hover {
+    transform: translateY(-1px);
+}
+
+.btn-edit {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #2980b9;
+}
+
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+}
+
+.actions-cell {
+    white-space: nowrap;
+    min-width: 100px;
+}
+.btn-small {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    margin: 0 3px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 32px;
+    background-color: #e0e0e0;
+}
+
+.btn-small:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.btn-small:active {
+    transform: translateY(0);
+}
+
+/* Кнопка редактирования */
+.btn-edit {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #2980b9;
+}
+
+/* Кнопка увольнения */
+.btn-warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-warning:hover {
+    background-color: #e67e22;
+}
+
+/* Кнопка удаления */
+.btn-danger {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+}
+
+/* Кнопка восстановления */
+.btn-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.btn-success:hover {
+    background-color: #219a52;
+}
+
+/* Ячейка с кнопками */
+.actions-cell {
+    white-space: nowrap;
+    min-width: 110px;
+}
+.chart-empty {
+    text-align: center;
+    padding: 60px 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.chart-empty-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.chart-empty-text {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin-bottom: 10px;
+}
+
+.chart-empty-hint {
+    font-size: 13px;
+    color: #95a5a6;
+}
+
+/* ===== СТАТИСТИКА ГРАФИКА ===== */
+.chart-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px solid #ecf0f1;
+}
+
+.chart-stat {
+    text-align: center;
+    background: #f8f9fa;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+.chart-stat .stat-label {
+    display: block;
+    font-size: 11px;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.chart-stat .stat-value {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #3498db;
+}
+
+.btn-info {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-info:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+/* ===== ПУСТОЙ ГРАФИК ===== */
+.chart-empty {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin: 10px 0;
+}
+
+.chart-empty-icon {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+.chart-empty-text {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+}
+
+.chart-empty-hint {
+    font-size: 13px;
+    color: #95a5a6;
+}

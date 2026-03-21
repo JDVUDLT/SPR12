@@ -555,3 +555,32 @@ async function generateSprints() {
         }
     }
 }
+
+// ===== КОПИРОВАНИЕ СПРИНТОВ =====
+
+async function copySprintsFromLastYear() {
+    if (!currentTeamId) return;
+    
+    const lastYear = currentYear - 1;
+    
+    if (!confirm(`Скопировать спринты из ${lastYear} года в ${currentYear}?\n\nВнимание! Существующие спринты будут заменены.`)) {
+        return;
+    }
+    
+    try {
+        utils.showMessage('message', 'Копирование спринтов...', 'info');
+        
+        const result = await api.copySprintsFromYear(currentTeamId, lastYear);
+        
+        if (result.success) {
+            await loadSprintsList();
+            utils.showMessage('message', `✅ Скопировано ${result.count} спринтов из ${lastYear} года`, 'success');
+        } else {
+            utils.showMessage('message', result.error || 'Ошибка копирования', 'error');
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка копирования:', error);
+        utils.showMessage('message', 'Ошибка копирования спринтов', 'error');
+    }
+}
