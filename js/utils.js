@@ -94,7 +94,9 @@ const Utils = {
     // Сгенерировать ID
     generateId() {
         return Date.now().toString() + Math.random().toString(36).substr(2, 5);
-    }
+    },
+
+    
 };
 
 // Создаем глобальную переменную

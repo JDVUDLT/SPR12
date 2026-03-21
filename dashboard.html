@@ -52,6 +52,9 @@
                 <button class="btn btn-secondary" id="printBtn">
                     <span class="btn-icon">🖨️</span> Печать
                 </button>
+                <button class="btn btn-info" id="refreshChartBtn">
+                    <span class="btn-icon">📈</span> Обновить график
+                </button>
             </div>
         </div>
     </div>
@@ -90,11 +93,11 @@
             <!-- Таблица трудоемкости -->
             <div class="card">
                 <div class="card-header">
-                    <h2>Трудоемкость по спринтам</h2>
+                    <h2>📊 Трудоемкость по спринтам</h2>
                     <small class="hint">Нажмите на спринт для детализации</small>
                 </div>
                 <div class="table-container">
-                    <table class="capacity-table" id="capacityTable">
+                    <table class="capacity-table">
                         <thead>
                             <tr>
                                 <th>Спринт</th>
@@ -105,14 +108,11 @@
                             </tr>
                         </thead>
                         <tbody id="capacityTableBody">
-                            <tr>
-                                <td colspan="5" class="text-center">Выберите команду для отображения данных</td>
-                            </tr>
+                            <!-- Данные загружаются через JS -->
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
         
         <!-- Блок для сообщений -->
         <div id="message" class="message"></div>

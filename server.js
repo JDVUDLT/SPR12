@@ -762,6 +762,57 @@ function getDefaultStartDate() {
     return date.toISOString().split('T')[0];
 }
 
+app.post('/api/sprints/copy/:teamId', async (req, res) => {
+    try {
+        const { teamId } = req.params;
+        const { year } = req.body;
+        
+        const sprints = await readJSON('sprints.json');
+        
+        // Находим спринты за прошлый год
+        const lastYearSprints = sprints.filter(s => 
+            s.teamId === teamId && 
+            new Date(s.startDate).getFullYear() === year
+        );
+        
+        if (lastYearSprints.length === 0) {
+            return res.json({ success: false, error: `Нет спринтов за ${year} год` });
+        }
+        
+        // Удаляем старые спринты за текущий год
+        const currentYear = new Date().getFullYear();
+        const otherSprints = sprints.filter(s => 
+            !(s.teamId === teamId && new Date(s.startDate).getFullYear() === currentYear)
+        );
+        
+        // Создаем новые спринты со сдвигом дат
+        const newSprints = lastYearSprints.map(sprint => {
+            const newStart = new Date(sprint.startDate);
+            newStart.setFullYear(currentYear);
+            
+            const newEnd = new Date(sprint.endDate);
+            newEnd.setFullYear(currentYear);
+            
+            return {
+                ...sprint,
+                id: `${teamId}_sprint_${Date.now()}_${Math.random()}`,
+                startDate: newStart.toISOString().split('T')[0],
+                endDate: newEnd.toISOString().split('T')[0],
+                workingDays: 0
+            };
+        });
+        
+        const allSprints = [...otherSprints, ...newSprints];
+        await writeJSON('sprints.json', allSprints);
+        
+        res.json({ success: true, count: newSprints.length });
+        
+    } catch (error) {
+        console.error('❌ Ошибка копирования спринтов:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
 // ===== ЗАПУСК СЕРВЕРА =====
 app.listen(PORT, () => {
     console.log('=================================');

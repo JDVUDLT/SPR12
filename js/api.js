@@ -163,6 +163,10 @@ async updateAbsence(id, absenceData) {
     return this.request(`/api/absences/${id}`, 'PUT', absenceData);
 },
 
+async copySprintsFromYear(teamId, year) {
+    return this.request(`/api/sprints/copy/${teamId}`, 'POST', { year });
+},
+
 };
 
 // Создаем глобальную переменную
