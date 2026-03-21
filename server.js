@@ -3,15 +3,33 @@ const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 
-// ===== СОЗДАЕМ СЕРВЕР (ЭТО САМОЕ ГЛАВНОЕ!) =====
-const app = express();  // ← Вот здесь создается сервер!
-const PORT = 3000;
+const app = express();
+const PORT = process.env.PORT || 3000;  
 
 // ===== MIDDLEWARE =====
-app.use(express.json()); // Чтобы понимать JSON в запросах
-app.use(express.static(path.join(__dirname))); // Раздаем HTML из корня
+app.use(express.json()); 
+app.use(express.static(path.join(__dirname))); 
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
+
+const initDataFiles = async () => {
+    const files = ['Users.json', 'teams.json', 'employees.json', 'absences.json', 'sprints.json', 'holidays.json', 'settings.json'];
+    
+    for (const file of files) {
+        if (!await fs.pathExists(file)) {
+            await fs.writeJSON(file, []);
+            console.log(`📁 Создан файл: ${file}`);
+        }
+    }
+};
+
+initDataFiles().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+        console.log(`✅ Сервер запущен на порту ${PORT}`);
+    });
+}).catch(err => {
+    console.error('❌ Ошибка инициализации:', err);
+});
 
 const readJSON = async (filename) => {
     try {
@@ -814,16 +832,6 @@ app.post('/api/sprints/copy/:teamId', async (req, res) => {
 });
 
 // ===== ЗАПУСК СЕРВЕРА =====
-app.listen(PORT, () => {
-    console.log('=================================');
-    console.log(`✅ СЕРВЕР ЗАПУЩЕН!`);
-    console.log(`=================================`);
-    console.log(`📌 Адрес: http://localhost:${PORT}`);
-    console.log(`📌 Главная: http://localhost:${PORT}/`);
-    console.log(`📌 Вход: http://localhost:${PORT}/login`);
-    console.log(`📌 Регистрация: http://localhost:${PORT}/register`);
-    console.log(`📌 Профиль: http://localhost:${PORT}/profile`);
-    console.log(`📌 Дашборд: http://localhost:${PORT}/dashboard`);
-    console.log(`📌 Спринты: http://localhost:${PORT}/sprints`);
-    console.log('=================================');
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✅ Сервер запущен на порту ${PORT}`);
 });
