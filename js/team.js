@@ -192,6 +192,7 @@ async function createTeam() {
         utils.showMessage('message', 'Создание команды...', 'info');
         
         const userId = auth.getUserId();
+        
         const newTeam = await api.createTeam({
             name: teamName,
             userId: userId
@@ -202,7 +203,6 @@ async function createTeam() {
         hideCreateTeamForm();
         await loadTeams();
         
-        // Выбираем новую команду
         const select = document.getElementById('teamSelect');
         select.value = newTeam.id;
         await loadTeamData();
@@ -211,7 +211,7 @@ async function createTeam() {
         
     } catch (error) {
         console.error('❌ Ошибка создания команды:', error);
-        utils.showMessage('message', 'Ошибка создания команды', 'error');
+        utils.showMessage('message', 'Ошибка создания команды: ' + error.message, 'error');
     }
 }
 
@@ -293,7 +293,15 @@ function displayEmployeesTable(employees) {
     const tbody = document.getElementById('employeesList');
     
     if (!employees || employees.length === 0) {
-        tbody.innerHTML = `躬<td colspan="5" class="text-center">Нет сотрудников</td> </table>`;
+        const searchText = document.getElementById('searchEmployee')?.value;
+        const filterRole = document.getElementById('filterRole')?.value;
+        
+        let message = 'Нет сотрудников';
+        if (searchText || filterRole) {
+            message = 'Нет сотрудников, соответствующих критериям поиска';
+        }
+        
+        tbody.innerHTML = '<td colspan="5" class="text-center">👥 Нет сотрудников</td>';
         return;
     }
     
@@ -458,18 +466,12 @@ async function loadAbsences() {
         console.log(`📋 Загрузка отсутствий команды ${currentTeamId}`);
         
         const absences = await api.getAbsences(currentTeamId);
-        
-        // Создаем карту отсутствий для быстрого доступа
-        window.currentAbsencesMap = {};
-        absences.forEach(absence => {
-            if (!window.currentAbsencesMap[absence.employeeId]) {
-                window.currentAbsencesMap[absence.employeeId] = [];
-            }
-            window.currentAbsencesMap[absence.employeeId].push(absence);
-        });
-        
         const employees = await api.getEmployees(currentTeamId);
-        displayAbsencesTable(absences, employees);
+        
+        console.log(`📋 Загружено отсутствий: ${absences.length}`);
+        
+        // ИСПРАВЬТЕ ЗДЕСЬ: displayAbsencesTable -> displayAbsences
+        displayAbsences(absences, employees);
         
     } catch (error) {
         console.error('❌ Ошибка загрузки отсутствий:', error);
@@ -482,50 +484,31 @@ function displayAbsences(absences, employees) {
     const tbody = document.getElementById('absencesList');
     
     if (!absences || absences.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center">Нет данных об отсутствиях</td></tr>';
+        tbody.innerHTML = '<td colspan="6" class="text-center">📋 Нет данных об отсутствиях</td></tr>';
         return;
     }
     
-    // Создаем карту сотрудников для быстрого поиска
     const employeeMap = {};
-    employees.forEach(emp => {
-        employeeMap[emp.id] = emp;
-    });
+    employees.forEach(emp => employeeMap[emp.id] = emp);
     
     let html = '';
     absences.forEach(absence => {
         const employee = employeeMap[absence.employeeId];
         const employeeName = employee ? employee.fullName : 'Неизвестный сотрудник';
-        
-        // Рассчитываем количество дней
         const days = calculateDays(absence.startDate, absence.endDate);
         
-        // Получаем класс для типа отсутствия
-        const typeClass = getAbsenceTypeClass(absence.type);
-        
         html += `
-            <td class="actions-cell">
-                ${emp.fireDate ? `
-                    <!-- Кнопки для уволенного сотрудника -->
-                    <button class="btn btn-small btn-success" onclick="restoreEmployee('${emp.id}')" title="Восстановить сотрудника">
-                        🔄
-                    </button>
-                    <button class="btn btn-small btn-danger" onclick="deleteEmployee('${emp.id}')" title="Удалить сотрудника">
-                        🗑️
-                    </button>
-                ` : `
-                    <!-- Кнопки для работающего сотрудника -->
-                    <button class="btn btn-small btn-edit" onclick="editEmployee('${emp.id}')" title="Редактировать сотрудника">
-                        ✏️
-                    </button>
-                    <button class="btn btn-small btn-warning" onclick="quickFireEmployee('${emp.id}')" title="Уволить сотрудника">
-                        📋
-                    </button>
-                    <button class="btn btn-small btn-danger" onclick="deleteEmployee('${emp.id}')" title="Удалить сотрудника">
-                        🗑️
-                    </button>
-                `}
-            </td>
+            <tr>
+                <td>${employeeName}</td>
+                <td>${utils.getAbsenceTypeName(absence.type)}</td>
+                <td>${utils.formatDate(absence.startDate)} - ${utils.formatDate(absence.endDate)}</td>
+                <td>${days} дн.</td>
+                <td>${absence.note || '-'}</td>
+                <td>
+                    <button class="btn btn-small btn-edit" onclick="editAbsence('${absence.id}')">✏️</button>
+                    <button class="btn btn-small btn-danger" onclick="deleteAbsence('${absence.id}')">🗑️</button>
+                 </td>
+             </tr>
         `;
     });
     
@@ -576,16 +559,32 @@ function hideAddAbsenceForm() {
 
 // Загрузить сотрудников для выпадающего списка
 async function loadEmployeesForSelect() {
-    if (!currentTeamId) return;
+    if (!currentTeamId) {
+        console.log("❌ currentTeamId не определен");
+        return;
+    }
     
     try {
+        console.log(`📋 Загрузка сотрудников для селекта команды ${currentTeamId}`);
+        
         const employees = await api.getEmployees(currentTeamId);
+        console.log(`📋 Загружено сотрудников: ${employees.length}`);
+        
         const select = document.getElementById('absenceEmployee');
+        if (!select) {
+            console.log("❌ Элемент absenceEmployee не найден");
+            return;
+        }
         
         select.innerHTML = '<option value="">-- Выберите сотрудника --</option>';
         
         // Только работающие сотрудники (без даты увольнения)
         const activeEmployees = employees.filter(emp => !emp.fireDate);
+        
+        if (activeEmployees.length === 0) {
+            select.innerHTML = '<option value="">-- Нет активных сотрудников --</option>';
+            return;
+        }
         
         activeEmployees.forEach(emp => {
             const option = document.createElement('option');
@@ -594,8 +593,15 @@ async function loadEmployeesForSelect() {
             select.appendChild(option);
         });
         
+        console.log(`✅ Загружено ${activeEmployees.length} активных сотрудников`);
+        
     } catch (error) {
         console.error('❌ Ошибка загрузки сотрудников для селекта:', error);
+        console.error('❌ Детали:', error.message);
+        const select = document.getElementById('absenceEmployee');
+        if (select) {
+            select.innerHTML = '<option value="">-- Ошибка загрузки --</option>';
+        }
     }
 }
 
@@ -607,14 +613,15 @@ async function addAbsence() {
     const endDate = document.getElementById('absenceEnd').value;
     const note = document.getElementById('absenceNote').value.trim();
     
-    // Валидация
+    console.log("📋 Добавление отсутствия:", { employeeId, type, startDate, endDate, note });
+    
     if (!employeeId) {
         utils.showMessage('message', 'Выберите сотрудника', 'error');
         return;
     }
     
     if (!startDate || !endDate) {
-        utils.showMessage('message', 'Выберите даты начала и окончания', 'error');
+        utils.showMessage('message', 'Выберите даты', 'error');
         return;
     }
     
@@ -624,10 +631,15 @@ async function addAbsence() {
     }
     
     try {
-        console.log("📋 Добавление отсутствия:", { employeeId, type, startDate, endDate, note });
         utils.showMessage('message', 'Добавление отсутствия...', 'info');
         
-        await api.addAbsence({
+        // Блокируем кнопку
+        const addBtn = document.getElementById('addAbsenceBtn');
+        const originalText = addBtn.textContent;
+        addBtn.textContent = '⏳ Сохранение...';
+        addBtn.disabled = true;
+        
+        const result = await api.addAbsence({
             employeeId: employeeId,
             type: type,
             startDate: startDate,
@@ -635,16 +647,37 @@ async function addAbsence() {
             note: note
         });
         
-        console.log("✅ Отсутствие добавлено");
+        console.log("✅ Результат:", result);
         
+        // Скрываем форму
         hideAddAbsenceForm();
+        
+        // Очищаем поля
+        document.getElementById('absenceNote').value = '';
+        document.getElementById('absenceStart').value = '';
+        document.getElementById('absenceEnd').value = '';
+        
+        // Обновляем список отсутствий
         await loadAbsences();
         
-        utils.showMessage('message', 'Отсутствие добавлено!', 'success');
+        // Обновляем статусы сотрудников
+        await loadEmployees();
+        
+        utils.showMessage('message', '✅ Отсутствие добавлено!', 'success');
+        
+        // Разблокируем кнопку
+        addBtn.textContent = originalText;
+        addBtn.disabled = false;
         
     } catch (error) {
         console.error('❌ Ошибка добавления отсутствия:', error);
-        utils.showMessage('message', 'Ошибка добавления отсутствия', 'error');
+        utils.showMessage('message', '❌ Ошибка: ' + error.message, 'error');
+        
+        const addBtn = document.getElementById('addAbsenceBtn');
+        if (addBtn) {
+            addBtn.textContent = 'Сохранить';
+            addBtn.disabled = false;
+        }
     }
 }
 
@@ -805,10 +838,7 @@ function cancelEditEmployee() {
 
 // Редактировать отсутствие
 async function editAbsence(id) {
-    console.log(`📋 Редактирование отсутствия: ${id}`);
-    
     try {
-        // Получаем данные отсутствия
         const absences = await api.getAbsences(currentTeamId);
         const absence = absences.find(a => a.id === id);
         
@@ -817,24 +847,28 @@ async function editAbsence(id) {
             return;
         }
         
-        // Заполняем форму
         document.getElementById('editAbsenceId').value = absence.id;
-        document.getElementById('editAbsenceEmployee').value = absence.employeeId;
         document.getElementById('editAbsenceType').value = absence.type;
         document.getElementById('editAbsenceStart').value = absence.startDate;
         document.getElementById('editAbsenceEnd').value = absence.endDate;
         document.getElementById('editAbsenceNote').value = absence.note || '';
         
-        // Показываем форму
-        document.getElementById('editAbsenceForm').style.display = 'block';
-        document.getElementById('addAbsenceForm').style.display = 'none';
+        const employees = await api.getEmployees(currentTeamId);
+        const select = document.getElementById('editAbsenceEmployee');
+        select.innerHTML = '';
+        employees.forEach(emp => {
+            const option = document.createElement('option');
+            option.value = emp.id;
+            option.textContent = `${emp.fullName} (${utils.getRoleName(emp.role)})`;
+            if (emp.id === absence.employeeId) option.selected = true;
+            select.appendChild(option);
+        });
         
-        // Загружаем сотрудников для селекта
-        await loadEmployeesForEditSelect();
+        document.getElementById('editAbsenceForm').style.display = 'block';
         
     } catch (error) {
-        console.error('❌ Ошибка загрузки:', error);
-        utils.showMessage('message', 'Ошибка загрузки данных', 'error');
+        console.error('❌ Ошибка:', error);
+        utils.showMessage('message', 'Ошибка загрузки', 'error');
     }
 }
 
@@ -862,43 +896,19 @@ async function loadEmployeesForEditSelect() {
 // Сохранить изменения отсутствия
 async function saveAbsenceEdit() {
     const id = document.getElementById('editAbsenceId').value;
-    const employeeId = document.getElementById('editAbsenceEmployee').value;
-    const type = document.getElementById('editAbsenceType').value;
-    const startDate = document.getElementById('editAbsenceStart').value;
-    const endDate = document.getElementById('editAbsenceEnd').value;
-    const note = document.getElementById('editAbsenceNote').value.trim();
-    
-    if (!employeeId || !startDate || !endDate) {
-        utils.showMessage('message', 'Заполните все поля', 'error');
-        return;
-    }
-    
-    if (new Date(startDate) > new Date(endDate)) {
-        utils.showMessage('message', 'Дата начала не может быть позже даты окончания', 'error');
-        return;
-    }
-    
-    try {
-        console.log(`📋 Сохранение изменений отсутствия ${id}`);
-        utils.showMessage('message', 'Сохранение...', 'info');
-        
-        await api.updateAbsence(id, {
-            employeeId: employeeId,
-            type: type,
-            startDate: startDate,
-            endDate: endDate,
-            note: note
-        });
-        
-        hideEditAbsenceForm();
-        await loadAbsences();
-        
-        utils.showMessage('message', 'Изменения сохранены!', 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка сохранения:', error);
-        utils.showMessage('message', 'Ошибка сохранения', 'error');
-    }
+    await api.updateAbsence(id, {
+        employeeId: document.getElementById('editAbsenceEmployee').value,
+        type: document.getElementById('editAbsenceType').value,
+        startDate: document.getElementById('editAbsenceStart').value,
+        endDate: document.getElementById('editAbsenceEnd').value,
+        note: document.getElementById('editAbsenceNote').value
+    });
+    hideEditAbsenceForm();
+    await loadAbsences();
+}
+
+function hideEditAbsenceForm() {
+    document.getElementById('editAbsenceForm').style.display = 'none';
 }
 
 // Скрыть форму редактирования отсутствия
@@ -1063,7 +1073,7 @@ function displayEmployeesTable(employees) {
             message = '🔍 Нет сотрудников, соответствующих критериям поиска';
         }
         
-        tbody.innerHTML = `躬<td colspan="5" class="text-center">${message}</td> </tr>`;
+        tbody.innerHTML = `<td colspan="5" class="text-center">${message}</td> </tr>`;
         return;
     }
     
@@ -1301,247 +1311,6 @@ function showNotification(message, type = 'info') {
             setTimeout(() => notification.remove(), 300);
         }
     }, 5000);
-}
-
-// ===== БЫСТРОЕ УВОЛЬНЕНИЕ/ВОССТАНОВЛЕНИЕ =====
-
-async function quickFireEmployee(id) {
-    console.log(`🔫 Быстрое увольнение сотрудника: ${id}`);
-    
-    // Получаем данные сотрудника по ID
-    const employee = await getEmployeeById(id);
-    
-    // Если сотрудник не найден, показываем ошибку
-    if (!employee) {
-        utils.showMessage('message', '❌ Сотрудник не найден', 'error');
-        return;
-    }
-    
-    // Проверяем, не уволен ли уже сотрудник
-    if (employee.fireDate) {
-        utils.showMessage('message', `⚠️ Сотрудник "${employee.fullName}" уже уволен ${utils.formatDate(employee.fireDate)}`, 'warning');
-        return;
-    }
-    
-    // Формируем сообщение подтверждения
-    const today = new Date();
-    const todayStr = today.toLocaleDateString('ru-RU');
-    const confirmMessage = `📋 Увольнение сотрудника\n\n` +
-        `ФИО: ${employee.fullName}\n` +
-        `Роль: ${utils.getRoleName(employee.role)}\n` +
-        `Дата приема: ${utils.formatDate(employee.hireDate)}\n\n` +
-        `Дата увольнения: ${todayStr}\n\n` +
-        `Вы уверены, что хотите уволить сотрудника?`;
-    
-    // Запрашиваем подтверждение
-    if (!confirm(confirmMessage)) {
-        console.log("❌ Увольнение отменено пользователем");
-        return;
-    }
-    
-    try {
-        console.log(`📡 Отправка запроса на увольнение...`);
-        utils.showMessage('message', `⏳ Увольнение сотрудника "${employee.fullName}"...`, 'info');
-        
-        // Получаем текущую дату в формате YYYY-MM-DD
-        const fireDate = today.toISOString().split('T')[0];
-        
-        // Отправляем запрос на обновление сотрудника
-        await api.updateEmployee(id, {
-            fireDate: fireDate
-        });
-        
-        console.log(`✅ Сотрудник "${employee.fullName}" уволен`);
-        
-        // Обновляем список сотрудников
-        await loadEmployees();
-        
-        // Показываем сообщение об успехе
-        utils.showMessage('message', `✅ Сотрудник "${employee.fullName}" уволен (${todayStr})`, 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка увольнения:', error);
-        utils.showMessage('message', `❌ Ошибка увольнения: ${error.message}`, 'error');
-    }
-}
-
-/**
- * Восстановление уволенного сотрудника
- * @param {string} id - ID сотрудника
- */
-async function restoreEmployee(id) {
-    console.log(`🔄 Восстановление сотрудника: ${id}`);
-    
-    // Получаем данные сотрудника по ID
-    const employee = await getEmployeeById(id);
-    
-    // Если сотрудник не найден, показываем ошибку
-    if (!employee) {
-        utils.showMessage('message', '❌ Сотрудник не найден', 'error');
-        return;
-    }
-    
-    // Проверяем, уволен ли сотрудник
-    if (!employee.fireDate) {
-        utils.showMessage('message', `⚠️ Сотрудник "${employee.fullName}" уже работает`, 'warning');
-        return;
-    }
-    
-    // Формируем сообщение подтверждения
-    const confirmMessage = `🔄 Восстановление сотрудника\n\n` +
-        `ФИО: ${employee.fullName}\n` +
-        `Роль: ${utils.getRoleName(employee.role)}\n` +
-        `Дата приема: ${utils.formatDate(employee.hireDate)}\n` +
-        `Дата увольнения: ${utils.formatDate(employee.fireDate)}\n\n` +
-        `Вы уверены, что хотите восстановить сотрудника?`;
-    
-    // Запрашиваем подтверждение
-    if (!confirm(confirmMessage)) {
-        console.log("❌ Восстановление отменено пользователем");
-        return;
-    }
-    
-    try {
-        console.log(`📡 Отправка запроса на восстановление...`);
-        utils.showMessage('message', `⏳ Восстановление сотрудника "${employee.fullName}"...`, 'info');
-        
-        // Отправляем запрос на обновление (удаляем дату увольнения)
-        await api.updateEmployee(id, {
-            fireDate: null
-        });
-        
-        console.log(`✅ Сотрудник "${employee.fullName}" восстановлен`);
-        
-        // Обновляем список сотрудников
-        await loadEmployees();
-        
-        // Показываем сообщение об успехе
-        utils.showMessage('message', `✅ Сотрудник "${employee.fullName}" восстановлен`, 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка восстановления:', error);
-        utils.showMessage('message', `❌ Ошибка восстановления: ${error.message}`, 'error');
-    }
-}
-
-/**
- * Получить сотрудника по ID
- * @param {string} id - ID сотрудника
- * @returns {Object|null} - Данные сотрудника или null
- */
-async function getEmployeeById(id) {
-    if (!currentTeamId) {
-        console.log("❌ Команда не выбрана");
-        return null;
-    }
-    
-    try {
-        const employees = await api.getEmployees(currentTeamId);
-        const employee = employees.find(e => e.id === id);
-        
-        if (!employee) {
-            console.log(`❌ Сотрудник с ID ${id} не найден`);
-            return null;
-        }
-        
-        return employee;
-        
-    } catch (error) {
-        console.error('❌ Ошибка получения сотрудника:', error);
-        return null;
-    }
-}
-
-async function exportEmployeeReport(employeeId) {
-    try {
-        const employee = await getEmployeeById(employeeId);
-        if (!employee) return;
-        
-        const [absences, sprints] = await Promise.all([
-            api.getAbsences(currentTeamId),
-            api.getSprints(currentTeamId)
-        ]);
-        
-        const employeeAbsences = absences.filter(a => a.employeeId === employeeId);
-        const currentYear = new Date().getFullYear();
-        const yearSprints = sprints.filter(s => new Date(s.startDate).getFullYear() === currentYear);
-        
-        // Создаем CSV отчет
-        let csv = [];
-        
-        // Заголовок
-        csv.push(['Отчет по сотруднику', employee.fullName]);
-        csv.push(['Дата создания', new Date().toLocaleString('ru-RU')]);
-        csv.push([]);
-        
-        // Информация о сотруднике
-        csv.push(['Информация о сотруднике']);
-        csv.push(['ФИО', employee.fullName]);
-        csv.push(['Роль', utils.getRoleName(employee.role)]);
-        csv.push(['Дата приема', utils.formatDate(employee.hireDate)]);
-        csv.push(['Дата увольнения', employee.fireDate ? utils.formatDate(employee.fireDate) : 'Работает']);
-        csv.push([]);
-        
-        // Отсутствия
-        csv.push(['Отсутствия']);
-        csv.push(['Тип', 'Дата начала', 'Дата окончания', 'Дней']);
-        
-        employeeAbsences.forEach(absence => {
-            const days = calculateDays(absence.startDate, absence.endDate);
-            csv.push([
-                getAbsenceTypeName(absence.type),
-                utils.formatDate(absence.startDate),
-                utils.formatDate(absence.endDate),
-                days
-            ]);
-        });
-        
-        if (employeeAbsences.length === 0) {
-            csv.push(['Нет записей об отсутствиях']);
-        }
-        
-        csv.push([]);
-        
-        // Доступные дни
-        csv.push(['Доступность по спринтам']);
-        csv.push(['Спринт', 'Период', 'Рабочих дней', 'Дней отсутствия', 'Доступно']);
-        
-        yearSprints.forEach(sprint => {
-            const workingDays = calculateWorkingDaysInSprint(sprint);
-            const absenceDays = calculateAbsenceDaysInSprint(employeeAbsences, sprint);
-            const availableDays = workingDays - absenceDays;
-            
-            csv.push([
-                sprint.name,
-                `${utils.formatDate(sprint.startDate)} - ${utils.formatDate(sprint.endDate)}`,
-                workingDays,
-                absenceDays,
-                availableDays
-            ]);
-        });
-        
-        // Скачиваем файл
-        const csvString = csv.map(row => 
-            row.map(cell => `"${cell || ''}"`).join(',')
-        ).join('\n');
-        
-        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', `employee_${employee.fullName}_report.csv`);
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        utils.showMessage('message', `✅ Отчет по сотруднику "${employee.fullName}" сохранен`, 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка экспорта:', error);
-        utils.showMessage('message', 'Ошибка экспорта отчета', 'error');
-    }
 }
 
 // Вспомогательные функции для расчета

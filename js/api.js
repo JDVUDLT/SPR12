@@ -49,6 +49,7 @@ async getTeams() {
 
 // Создать команду
 async createTeam(teamData) {
+    console.log("📡 API.createTeam вызван:", teamData);
     return this.request('/api/teams', 'POST', teamData);
 },
 
@@ -61,7 +62,15 @@ async getUserTeams(userId) {
 
 // Получить сотрудников команды
 async getEmployees(teamId) {
-    return this.request(`/api/employees/${teamId}`);
+    console.log(`📡 API.getEmployees вызван для teamId: ${teamId}`);
+    try {
+        const result = await this.request(`/api/employees/${teamId}`);
+        console.log(`📡 API.getEmployees вернул: ${result.length} сотрудников`);
+        return result;
+    } catch (error) {
+        console.error(`❌ API.getEmployees ошибка:`, error);
+        throw error;
+    }
 },
 
 // Добавить сотрудника
@@ -81,20 +90,35 @@ async deleteEmployee(id) {
 
 // ===== ОТСУТСТВИЯ =====
 
-// Получить отсутствия команды
 async getAbsences(teamId) {
-    return this.request(`/api/absences/${teamId}`);
-},
-
+        console.log(`📡 API.getAbsences вызван для teamId: ${teamId}`);
+        try {
+            const result = await this.request(`/api/absences/${teamId}`);
+            console.log(`📡 API.getAbsences вернул: ${result.length} записей`);
+            return result;
+        } catch (error) {
+            console.error(`❌ API.getAbsences ошибка:`, error);
+            throw error;
+        }
+    },
+    
 // Добавить отсутствие
 async addAbsence(absenceData) {
-    return this.request('/api/absences', 'POST', absenceData);
-},
-
+        console.log("📡 API.addAbsence вызван:", absenceData);
+        return this.request('/api/absences', 'POST', absenceData);
+    },
+    
+// Обновить отсутствие
+async updateAbsence(id, absenceData) {
+        console.log(`📡 API.updateAbsence вызван для ${id}:`, absenceData);
+        return this.request(`/api/absences/${id}`, 'PUT', absenceData);
+    },
+    
 // Удалить отсутствие
 async deleteAbsence(id) {
-    return this.request(`/api/absences/${id}`, 'DELETE');
-},
+        console.log(`📡 API.deleteAbsence вызван для ${id}`);
+        return this.request(`/api/absences/${id}`, 'DELETE');
+    },
 
 // ===== НАСТРОЙКИ =====
     
