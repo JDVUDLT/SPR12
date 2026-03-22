@@ -60,17 +60,15 @@ async function loadUserProfile() {
 
 // Отобразить профиль пользователя
 function displayUserProfile(user) {
-    // Основная информация
     document.getElementById('userName').textContent = user.name || 'Не указано';
     document.getElementById('userLogin').textContent = user.log || 'Не указано';
     document.getElementById('userEmail').textContent = user.email || 'Не указан';
     document.getElementById('userId').textContent = user.id || 'Не указан';
     
-    // Дата регистрации
-    const regDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('ru-RU') : 'Неизвестно';
-    document.getElementById('userRegDate').textContent = regDate;
+    // Удалите эти строки:
+    // const regDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('ru-RU') : 'Неизвестно';
+    // document.getElementById('userRegDate').textContent = regDate;
     
-    // Аватар (первая буква имени или логина)
     const firstLetter = (user.name || user.log || '?').charAt(0).toUpperCase();
     document.getElementById('userAvatar').textContent = firstLetter;
 }
