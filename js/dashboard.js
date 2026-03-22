@@ -495,3 +495,123 @@ function displaySummaryStats(capacityData, employees) {
     
     console.log(`📊 Статистика: всего=${totalCapacity}, среднее=${avgCapacity}, сотрудников=${totalEmployees}, спринтов=${totalSprints}`);
 }
+
+async function getCurrentCapacityData() {
+    if (!currentTeamId) return null;
+    
+    try {
+        const [employees, sprints, absences, holidays] = await Promise.all([
+            api.getEmployees(currentTeamId),
+            api.getSprints(currentTeamId),
+            api.getAbsences(currentTeamId),
+            api.getHolidays(currentTeamId)
+        ]);
+        
+        const yearSprints = sprints.filter(s => new Date(s.startDate).getFullYear() === currentYear);
+        
+        if (yearSprints.length === 0) return null;
+        
+        return calculateCapacity(employees || [], yearSprints, absences || [], holidays || []);
+        
+    } catch (error) {
+        console.error("❌ Ошибка получения данных:", error);
+        return null;
+    }
+}
+
+async function exportToExcel() {
+    if (!currentTeamId) {
+        utils.showMessage('message', 'Выберите команду', 'error');
+        return;
+    }
+    
+    try {
+        const capacityData = await getCurrentCapacityData();
+        
+        if (!capacityData || !capacityData.sprints || capacityData.sprints.length === 0) {
+            utils.showMessage('message', 'Нет данных для экспорта', 'error');
+            return;
+        }
+        
+        // Создаем CSV
+        let csv = [];
+        
+        // Заголовок
+        csv.push(['Отчет по трудоемкости']);
+        csv.push([`Команда: ${document.getElementById('teamSelect').options[document.getElementById('teamSelect').selectedIndex]?.text || ''}`]);
+        csv.push([`Год: ${currentYear}`]);
+        csv.push([`Дата: ${new Date().toLocaleDateString('ru-RU')}`]);
+        csv.push([]);
+        
+        // Статистика
+        const totalCapacity = capacityData.total;
+        const avgCapacity = capacityData.sprints.length ? Math.round(totalCapacity / capacityData.sprints.length * 100) / 100 : 0;
+        
+        csv.push(['Сводная статистика']);
+        csv.push(['Всего человеко-дней', totalCapacity]);
+        csv.push(['Среднее на спринт', avgCapacity]);
+        csv.push(['Всего спринтов', capacityData.sprints.length]);
+        csv.push([]);
+        
+        // Таблица спринтов
+        csv.push(['Детализация по спринтам']);
+        csv.push(['Спринт', 'Дата начала', 'Дата окончания', 'Рабочих дней', 'Доступно чел-дней', 'Загрузка %']);
+        
+        const maxCapacity = Math.max(...capacityData.sprints.map(s => s.totalCapacity), 1);
+        
+        capacityData.sprints.forEach(sprint => {
+            const percent = Math.round((sprint.totalCapacity / maxCapacity) * 100);
+            csv.push([
+                sprint.name,
+                utils.formatDate(sprint.startDate),
+                utils.formatDate(sprint.endDate),
+                sprint.workingDays || 0,
+                sprint.totalCapacity,
+                `${percent}%`
+            ]);
+        });
+        
+        // Детализация по сотрудникам
+        csv.push([]);
+        csv.push(['Детализация по сотрудникам']);
+        csv.push(['Спринт', 'Сотрудник', 'Рабочих дней', 'Вклад']);
+        
+        capacityData.sprints.forEach(sprint => {
+            if (sprint.employeeDetails && sprint.employeeDetails.length > 0) {
+                sprint.employeeDetails.forEach(emp => {
+                    csv.push([
+                        sprint.name,
+                        emp.name,
+                        emp.workingDays,
+                        emp.capacity
+                    ]);
+                });
+            }
+        });
+        
+        // Конвертируем в CSV
+        const csvString = csv.map(row => 
+            row.map(cell => `"${String(cell || '').replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+        
+        // Скачиваем
+        const blob = new Blob(['\uFEFF' + csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `capacity_${currentTeamId}_${currentYear}.csv`);
+        link.style.display = 'none';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        utils.showMessage('message', '✅ Отчет экспортирован!', 'success');
+        
+    } catch (error) {
+        console.error('❌ Ошибка экспорта:', error);
+        utils.showMessage('message', 'Ошибка экспорта', 'error');
+    }
+}
