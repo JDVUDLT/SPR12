@@ -89,8 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert('Успешный вход!');
                 }
                 
-                // Сохраняем пользователя (используем auth)
-                console.log("💾 Сохраняем пользователя через auth.setUser()");
+                console.log("💾 Сохраняем токен и пользователя");
+
+                // Сохраняем JWT
+                localStorage.setItem('token', result.token);
+
+                // Сохраняем пользователя
                 auth.setUser(result.user);
                 
                 // Перенаправляем на главную

@@ -3,7 +3,36 @@ const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 const app = express();
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const SECRET_KEY = "supersecret";
+function authMiddleware(req, res, next) {
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) return res.status(401).json({ success: false, msg: "Нет токена" });
 
+    const token = authHeader.split(" ")[1]; // "Bearer <token>"
+    if (!token) return res.status(401).json({ success: false, msg: "Нет токена" });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ success: false, msg: "Неверный или истекший токен" });
+    }
+}
+
+async function checkTeamAccess(teamId, userId) {
+    if (!await fs.pathExists('teams.json')) return false;
+
+    const teams = await fs.readJSON('teams.json');
+
+    const team = teams.find(t => t.id === teamId);
+
+    if (!team) return false;
+
+    return team.ownerId === userId;
+}
 // ===== MIDDLEWARE =====
 app.use(express.json()); 
 app.use(express.static(path.join(__dirname))); 
@@ -48,9 +77,16 @@ app.post("/sendDataRegistration", async (req, res) => {
         // Проверяем обязательные поля
         if (!name || !log || !pass) {
             console.log("❌ Ошибка: не все поля заполнены");
-            return res.json({ 
-                msg: "Все поля обязательны",
-                success: false 
+            return res.status(400).json({ 
+            msg: "Все поля обязательны",
+            success: false 
+        });
+        }
+
+        if (email && !email.includes("@")) {
+            return res.json({
+                msg: "Некорректный email",
+                success: false
             });
         }
         
@@ -73,14 +109,14 @@ app.post("/sendDataRegistration", async (req, res) => {
                 success: false 
             });
         }
-        
+        const hashedPassword = await bcrypt.hash(pass, 10);
         // Создаем нового пользователя
         const newUser = {
             id: Date.now().toString(),
             name: name,
             log: log,
             email: email || '',
-            pass: pass,
+            pass: hashedPassword,
             createdAt: new Date().toISOString()
         };
         
@@ -120,7 +156,6 @@ app.post("/sendDataLogin", async (req, res) => {
             return res.json({ success: false, msg: "Логин и пароль обязательны" });
         }
         
-        // Проверяем существование файла
         if (!await fs.pathExists("Users.json")) {
             await fs.writeJSON("Users.json", []);
             console.log("📁 Создан Users.json");
@@ -129,40 +164,62 @@ app.post("/sendDataLogin", async (req, res) => {
         const users = await fs.readJSON("Users.json");
         console.log(`📋 В файле ${users.length} пользователей`);
         
-        const user = users.find(u => u.log === log && u.pass === pass);
-        
-        if (user) {
-            console.log(`✅ Успешный вход: ${log}`);
-            res.json({
-                success: true,
-                msg: "Вы успешно вошли",
-                user: { id: user.id, name: user.name, log: user.log, email: user.email }
-            });
-        } else {
-            console.log(`❌ Неудачный вход: ${log}`);
-            res.json({ success: false, msg: "Неверный логин или пароль" });
-        }
+        const user = users.find(u => u.log === log);
+        if (!user) return res.json({ success: false, msg: "Пользователь не найден" });
+
+        const isMatch = await bcrypt.compare(pass, user.pass);
+        if (!isMatch) return res.json({ success: false, msg: "Неверный пароль" });
+
+        // Генерация токена
+        const token = jwt.sign(
+            { id: user.id, log: user.log, role: user.role || "owner" }, 
+            SECRET_KEY, 
+            { expiresIn: "1h" }
+        );
+
+        console.log(`✅ Успешный вход: ${log}`);
+        return res.json({
+            success: true,
+            msg: "Вы успешно вошли",
+            token,
+            user: { 
+                id: user.id, 
+                name: user.name, 
+                log: user.log, 
+                email: user.email,
+                role: user.role || "owner"
+            }
+        });
         
     } catch (error) {
         console.error("❌ Ошибка:", error);
-        res.json({ success: false, msg: "Ошибка сервера: " + error.message });
+        return res.status(500).json({ 
+            success: false, 
+            msg: "Ошибка сервера: " + error.message 
+        });
     }
 });
 
 // ===== КОМАНДЫ =====
 
-app.get('/api/teams', async (req, res) => {
-    console.log("📋 Запрос списка команд");
+app.get('/api/teams', authMiddleware, async (req, res) => {
+    console.log("📋 Запрос списка команд от пользователя:", req.user.log);
     
     try {
-        // Проверяем существование файла
         if (!await fs.pathExists('teams.json')) {
             await fs.writeJSON('teams.json', []);
         }
         
         const teams = await fs.readJSON('teams.json');
-        console.log(`📋 Загружено команд: ${teams.length}`);
+
+        // Если хотим фильтровать только команды пользователя:
+        // const userTeams = teams.filter(t => t.ownerId === req.user.id);
+        // res.json(userTeams);
+
+        // Или пока отдаём все команды (если фильтр не нужен)
         res.json(teams);
+        
+        console.log(`📋 Загружено команд: ${teams.length}`);
         
     } catch (error) {
         console.error("❌ Ошибка:", error);
@@ -171,19 +228,19 @@ app.get('/api/teams', async (req, res) => {
 });
 
 // Создать новую команду
-app.post('/api/teams', async (req, res) => {
+app.post('/api/teams', authMiddleware, async (req, res) => {
     console.log("📋 POST /api/teams вызван");
     console.log("📦 Тело запроса:", req.body);
     
     try {
-        const { name, userId } = req.body;
+        const { name } = req.body;
+        const userId = req.user.id; // 🔥 из токена
         
-        if (!name || !userId) {
-            console.log("❌ Ошибка: нет name или userId");
-            return res.status(400).json({ error: "Название команды и ID пользователя обязательны" });
+        if (!name) {
+            console.log("❌ Ошибка: нет name");
+            return res.status(400).json({ error: "Название команды обязательно" });
         }
         
-        // Проверяем существование файла
         if (!await fs.pathExists('teams.json')) {
             await fs.writeJSON('teams.json', []);
         }
@@ -193,7 +250,7 @@ app.post('/api/teams', async (req, res) => {
         const newTeam = {
             id: Date.now().toString(),
             name: name,
-            ownerId: userId,
+            ownerId: userId, // 🔥 безопасно
             createdAt: new Date().toISOString()
         };
         
@@ -225,7 +282,16 @@ app.get('/api/teams/user/:userId', async (req, res) => {
 // ===== СОТРУДНИКИ =====
 
 // Получить сотрудников команды
-app.get('/api/employees/:teamId', async (req, res) => {
+app.get('/api/employees/:teamId', authMiddleware, async (req, res) => {
+    const { teamId } = req.params;
+    const userId = req.user.id;
+
+    // 🔐 Проверка доступа
+    const hasAccess = await checkTeamAccess(teamId, userId);
+    if (!hasAccess) {
+        return res.status(403).json({ error: "Нет доступа к команде" });
+    }
+
     console.log(`📋 GET /api/employees/${req.params.teamId} вызван`);
     
     try {
@@ -353,7 +419,14 @@ app.delete('/api/employees/:id', async (req, res) => {
 // ===== ОТСУТСТВИЯ =====
 
 // Получить отсутствия команды
-app.get('/api/absences/:teamId', async (req, res) => {
+app.get('/api/absences/:teamId', authMiddleware, async (req, res) => {
+    const { teamId } = req.params;
+    const userId = req.user.id;
+
+    const hasAccess = await checkTeamAccess(teamId, userId);
+    if (!hasAccess) {
+        return res.status(403).json({ error: "Нет доступа к команде" });
+    }
     console.log(`📋 GET /api/absences/${req.params.teamId} вызван`);
     
     try {
