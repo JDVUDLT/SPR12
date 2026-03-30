@@ -8,24 +8,41 @@ const API = {
     
     // Универсальный метод для запросов
     async request(endpoint, method = 'GET', data = null) {
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        };
-        
-        if (data) {
-            options.body = JSON.stringify(data);
+    const options = {
+        method,
+        headers: {
+            'Content-Type': 'application/json'
         }
-        
-        const response = await fetch(this.baseUrl + endpoint, options);
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    };
+
+    // Добавляем JWT если он есть
+    const token = localStorage.getItem('token');
+    if (token) {
+        options.headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    if (data) {
+        options.body = JSON.stringify(data);
+    }
+
+    const response = await fetch(this.baseUrl + endpoint, options);
+
+    if (!response.ok) {
+        if (response.status === 401) {
+            console.warn("⛔ 401 Unauthorized — разлогиниваем пользователя");
+
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+
+            window.location.href = '/login';
+            return;
         }
-        
-        return await response.json();
+
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result;
     },
     
     // ===== АВТОРИЗАЦИЯ =====
@@ -35,9 +52,13 @@ const API = {
         return this.request('/sendDataRegistration', 'POST', userData);
     },
     
-    // Вход (добавлено!)
+    // Вход
     async login(credentials) {
-        return this.request('/sendDataLogin', 'POST', credentials);
+    const res = await this.request('/sendDataLogin', 'POST', credentials);
+    if (res.success && res.token) {
+        localStorage.setItem('token', res.token); // сохраняем токен
+    }
+    return res;
     },
     
 // ===== КОМАНДЫ =====

@@ -10,7 +10,13 @@ const Auth = {
         console.log("💾 Сохраняем пользователя:", user);
         localStorage.setItem('user', JSON.stringify(user));
     },
-    
+
+    getToken() {
+    const token = localStorage.getItem('token');
+    console.log("🔑 Токен:", token ? "есть" : "нет");
+    return token;
+    },
+
     // Получить пользователя
     getUser() {
         const userStr = localStorage.getItem('user');
@@ -31,32 +37,33 @@ const Auth = {
     
     // Проверить, авторизован ли
     isAuthenticated() {
-        const isAuth = this.getUser() !== null;
-        console.log("🔐 Проверка авторизации:", isAuth);
-        return isAuth;
+    const token = this.getToken();
+    const isAuth = !!token;
+    console.log("🔐 Проверка авторизации (по токену):", isAuth);
+    return isAuth;
     },
     
     // Выйти
     logout() {
-        console.log("🚪 Выход из системы");
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+    console.log("🚪 Выход из системы");
+    localStorage.removeItem('user');
+    localStorage.removeItem('token'); 
+    window.location.href = '/login';
     },
     
     // Требовать авторизацию
     requireAuth() {
-        const isAuth = this.isAuthenticated();
-        console.log("🔐 requireAuth вызван, авторизация:", isAuth);
-        
-        if (!isAuth) {
-            console.log("⚠️ Перенаправление на /login");
-            // Проверяем, что мы не уже на странице логина
-            if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
-            }
-            return false;
+    const isAuth = this.isAuthenticated();
+    console.log("🔐 requireAuth вызван, авторизация:", isAuth);
+    
+    if (!isAuth) {
+        console.log("⚠️ Перенаправление на /login");
+        if (window.location.pathname !== '/login') {
+            window.location.href = '/login';
         }
-        return true;
+        return false;
+    }
+    return true;
     },
     
     // Получить ID текущего пользователя
