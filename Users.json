@@ -6,5 +6,32 @@
         "email": "123@gmail.com",
         "pass": "$2b$10$xVVe1QSDQnsDvFI8eD6HTOhqI/tZFBN9o8EppawVOgD4MXBUgd8VW",
         "createdAt": "2026-03-27T07:22:15.668Z"
+    },
+    {
+        "id": "1774938926189",
+        "name": "1234",
+        "log": "1234",
+        "email": "123@gmail.com",
+        "pass": "$2b$10$JvkZapyWLr4M3l0i6Ps0gOiyKt30j3WpPnevjyWu8vU4G7.IVXQ/O",
+        "role": "owner",
+        "createdAt": "2026-03-31T06:35:26.189Z"
+    },
+    {
+        "id": "1774961998905",
+        "name": "12345",
+        "log": "12345",
+        "email": "123@gmail.com",
+        "pass": "$2b$10$Yhiuf2H1Cvvorg7PiUCQZeiAVuK0EhOZ1grppriCKEEo8zQDbdN0q",
+        "role": "owner",
+        "createdAt": "2026-03-31T12:59:58.905Z"
+    },
+    {
+        "id": "1774962032564",
+        "name": "123456",
+        "log": "123456",
+        "email": "emaol@gmail.com",
+        "pass": "$2b$10$.aY6eWeuZ2Rqok.qP91z6uINaQViVEepOh9/8.9KwC7ChGHdik7IK",
+        "role": "owner",
+        "createdAt": "2026-03-31T13:00:32.564Z"
     }
 ]
