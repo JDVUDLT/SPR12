@@ -8,56 +8,44 @@ const API = {
     
     // Универсальный метод для запросов
     async request(endpoint, method = 'GET', data = null) {
-    const options = {
-        method,
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    };
+        const token = localStorage.getItem('token');
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        };
 
-    // Добавляем JWT если он есть
-    const token = localStorage.getItem('token');
-    if (token) {
-        options.headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    if (data) {
-        options.body = JSON.stringify(data);
-    }
-
-    const response = await fetch(this.baseUrl + endpoint, options);
-
-    if (!response.ok) {
-        if (response.status === 401) {
-            console.warn("⛔ 401 Unauthorized — разлогиниваем пользователя");
-
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-
-            window.location.href = '/login';
-            return;
+        if (data) {
+            options.body = JSON.stringify(data);
         }
 
-        throw new Error(`HTTP error! status: ${response.status}`);
-    }
+        const response = await fetch(endpoint, options);
 
-    const result = await response.json();
-    return result;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
     },
     
     // ===== АВТОРИЗАЦИЯ =====
     
     // Регистрация
-    async register(userData) {
-        return this.request('/sendDataRegistration', 'POST', userData);
+    register(data) {
+    return this.request('/api/auth/register', 'POST', data);
     },
     
     // Вход
     async login(credentials) {
-    const res = await this.request('/sendDataLogin', 'POST', credentials);
+    const res = await this.request('/api/auth/login', 'POST', credentials);
+
     if (res.success && res.token) {
-        localStorage.setItem('token', res.token); // сохраняем токен
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user)); // 🔥 важно
     }
+
     return res;
     },
     

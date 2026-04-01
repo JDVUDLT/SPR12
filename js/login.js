@@ -100,8 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Перенаправляем на главную
                 console.log("➡️ Перенаправление на главную через 1 секунду");
                 setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                    window.location.href = "/";
+                }, 10);
             } else {
                 console.log("❌ Ошибка входа:", result.msg);
                 if (typeof utils !== 'undefined' && utils.showMessage) {
