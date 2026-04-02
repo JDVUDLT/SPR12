@@ -1,6 +1,6 @@
 const fs = require('fs-extra');
 
-const FILE = 'data/holidays.json';
+const FILE = 'holidays.json';
 
 async function ensureFile() {
     if (!await fs.pathExists(FILE)) {

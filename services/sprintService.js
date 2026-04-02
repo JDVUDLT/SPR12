@@ -1,8 +1,19 @@
 const fs = require('fs-extra');
 const { calculateWorkingDays } = require('./dateService');
 
-const SPRINTS_FILE = 'data/sprints.json';
-const HOLIDAYS_FILE = 'data/holidays.json';
+const SPRINTS_FILE = 'sprints.json';
+const HOLIDAYS_FILE = 'holidays.json';
+
+async function getByTeam(teamId) {
+    const sprints = await fs.readJSON(SPRINTS_FILE);
+    return sprints.filter(s => s.teamId === teamId);
+}
+
+module.exports = {
+    calculateDays,
+    copySprints,
+    getByTeam
+};
 
 async function calculateDays(teamId) {
     const sprints = await fs.readJSON(SPRINTS_FILE);
