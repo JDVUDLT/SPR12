@@ -92,13 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("💾 Сохраняем токен и пользователя");
 
                 // Сохраняем JWT
-                localStorage.setItem('token', result.token);
+                localStorage.setItem('accessToken', result.accessToken);
+                localStorage.setItem('refreshToken', result.refreshToken);
 
                 // Сохраняем пользователя
                 auth.setUser(result.user);
                 
                 // Перенаправляем на главную
-                console.log("➡️ Перенаправление на главную через 1 секунду");
                 setTimeout(() => {
                     window.location.href = "/";
                 }, 10);

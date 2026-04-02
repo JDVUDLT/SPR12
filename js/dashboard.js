@@ -7,7 +7,11 @@ let currentYear = new Date().getFullYear();
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("✅ DOM загружен");
     
-    if (!auth.requireAuth()) return;
+    if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+        if (!auth.isAuthenticated()) {
+            return;
+        }
+    }
     
     await loadUserTeams();
     setupEventListeners();
