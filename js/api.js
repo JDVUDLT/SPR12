@@ -8,20 +8,47 @@ const API = {
     
     // Универсальный метод для запросов
     async request(endpoint, method = 'GET', data = null) {
-        const token = localStorage.getItem('token');
-        const options = {
-            method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            }
+        let accessToken = localStorage.getItem('accessToken');
+
+        const makeRequest = () => {
+            const accessToken = localStorage.getItem('accessToken'); // 🔥 ВАЖНО
+
+            return fetch(endpoint, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${accessToken}`
+                },
+                body: data ? JSON.stringify(data) : null
+            });
         };
 
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
+        let response = await makeRequest();
 
-        const response = await fetch(endpoint, options);
+    // 🔥 если токен умер
+        if (response.status === 401) {
+            const refreshToken = localStorage.getItem('refreshToken');
+
+            const refreshRes = await fetch('/api/auth/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken })
+            });
+
+            if (!refreshRes.ok) {
+                localStorage.clear();
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const refreshData = await refreshRes.json();
+
+            localStorage.setItem('accessToken', refreshData.accessToken);
+            accessToken = refreshData.accessToken;
+
+            // 🔁 повторяем запрос
+            response = await makeRequest();
+        }
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -40,11 +67,6 @@ const API = {
     // Вход
     async login(credentials) {
     const res = await this.request('/api/auth/login', 'POST', credentials);
-
-    if (res.success && res.token) {
-        localStorage.setItem('token', res.token);
-        localStorage.setItem('user', JSON.stringify(res.user)); // 🔥 важно
-    }
 
     return res;
     },

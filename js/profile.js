@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем, что мы не на странице логина
     if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
         if (!auth.isAuthenticated()) {
-            console.log("⚠️ Не авторизован, редирект на /login");
-            window.location.href = '/login';
             return;
         }
     }

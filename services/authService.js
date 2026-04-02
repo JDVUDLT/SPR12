@@ -77,21 +77,25 @@ async function login(data) {
         throw new Error("Неверный пароль");
     }
 
-    const token = jwt.sign(
-        { id: user.id, log: user.log, role: user.role || "owner" },
-        SECRET_KEY,
-        { expiresIn: "1h" }
-    );
+    const payload = {
+    id: user.id,
+    log: user.log,
+    role: user.role || "owner"
+    };
+
+    const accessToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "15m" });
+    const refreshToken = jwt.sign(payload, SECRET_KEY, { expiresIn: "7d" });
 
     return {
-        token,
-        user: {
-            id: user.id,
-            name: user.name,
-            log: user.log,
-            email: user.email,
-            role: user.role || "owner"
-        }
+    accessToken,
+    refreshToken,
+    user: {
+        id: user.id,
+        name: user.name,
+        log: user.log,
+        email: user.email,
+        role: user.role || "owner"
+    }
     };
 }
 
