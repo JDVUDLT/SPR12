@@ -1,5 +1,14 @@
 const service = require('../services/sprintService');
 
+async function getSprints(req, res) {
+    try {
+        const data = await service.getByTeam(req.params.teamId);
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 async function calculateDays(req, res) {
     try {
         const data = await service.calculateDays(req.params.teamId);
@@ -28,5 +37,6 @@ async function copySprints(req, res) {
 
 module.exports = {
     calculateDays,
-    copySprints
+    copySprints,
+    getSprints   
 };
