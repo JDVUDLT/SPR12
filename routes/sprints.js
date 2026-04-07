@@ -4,6 +4,7 @@ const auth = require('../middleware/authMiddleware');
 router.use(auth);
 
 router.get('/:teamId', controller.getSprints);
+router.post('/generate/:teamId', controller.generateSprints);
 router.post('/calculate-days/:teamId', controller.calculateDays);
 router.post('/copy/:teamId', controller.copySprints);
 

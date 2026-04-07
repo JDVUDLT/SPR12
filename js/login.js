@@ -82,27 +82,29 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("📥 Ответ от сервера:", result);
             
             if (result.success) {
-                console.log("✅ Успешный вход!");
-                if (typeof utils !== 'undefined' && utils.showMessage) {
-                    utils.showMessage('message', 'Успешный вход! Перенаправление...', 'success');
-                } else {
-                    alert('Успешный вход!');
-                }
-                
-                console.log("💾 Сохраняем токен и пользователя");
+                utils.showMessage('message', 'Успешный вход! Перенаправление...', 'success');
 
-                // Сохраняем JWT
+                if (!result.accessToken || !result.refreshToken) {
+                    throw new Error("Токены не получены с сервера");
+                }
+
+                // 💾 сохраняем токены
                 localStorage.setItem('accessToken', result.accessToken);
                 localStorage.setItem('refreshToken', result.refreshToken);
 
-                // Сохраняем пользователя
+                console.log("✅ TOKENS:", {
+                    access: result.accessToken,
+                    refresh: result.refreshToken
+                });
+
+                // 👤 пользователь
                 auth.setUser(result.user);
-                
-                // Перенаправляем на главную
+
                 setTimeout(() => {
                     window.location.href = "/";
-                }, 10);
-            } else {
+                }, 1000);
+            } 
+            else {
                 console.log("❌ Ошибка входа:", result.msg);
                 if (typeof utils !== 'undefined' && utils.showMessage) {
                     utils.showMessage('message', result.msg || 'Неверный логин или пароль', 'error');

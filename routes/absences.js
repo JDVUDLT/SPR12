@@ -1,10 +1,10 @@
 const router = require('express').Router();
-const c = require('../controllers/absencesController');
-const auth = require('../middleware/authMiddleware');
+const createAbsence = require('../controllers/absencesController');
+const authMiddleware = require('../middleware/authMiddleware');
 
-router.use(auth);
+router.use(authMiddleware);
 
-router.get('/:teamId', c.getAbsences);
-router.post('/', c.createAbsence);
+router.get('/:teamId', createAbsence.getAbsences);
+router.post('/', createAbsence.createAbsence);
 
 module.exports = router;

@@ -7,6 +7,7 @@ console.log("📁 sprints.js загружен");
 // Текущая выбранная команда
 let currentTeamId = null;
 
+
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем, что мы не на странице логина
@@ -301,87 +302,71 @@ async function saveSprintSettings() {
 }
 
 // Генерировать спринты
+let isGenerating = false;
+
 async function generateSprints() {
-    console.log("🟢🟢🟢 generateSprints ВЫЗВАНА! 🟢🟢🟢");
-    
-    // Проверяем, что кнопка не заблокирована
+    if (isGenerating) return;
+    isGenerating = true;
+
+    console.log("🟢 generateSprints");
+
     const generateBtn = document.getElementById('generateSprintsBtn');
-    if (generateBtn && generateBtn.disabled) {
-        console.log("⏳ Кнопка заблокирована, возможно уже идет генерация");
-        return;
-    }
-    
-    if (!currentTeamId) {
-        console.log("❌ currentTeamId не выбран");
-        utils.showMessage('message', 'Сначала выберите команду', 'error');
-        return;
-    }
-    
-    const duration = parseInt(document.getElementById('sprintDuration').value);
-    const firstStart = document.getElementById('firstSprintStart').value;
-    
-    console.log("📋 Параметры:", { duration, firstStart, currentTeamId });
-    
-    if (!duration || !firstStart) {
-        console.log("❌ Не заполнены поля");
-        utils.showMessage('message', 'Заполните все поля', 'error');
-        return;
-    }
-    
-    // Подтверждение
-    if (!confirm(`Сгенерировать спринты длительностью ${duration} дней, начиная с ${firstStart}?`)) {
-        return;
-    }
-    
+
     try {
-        utils.showMessage('message', 'Генерация спринтов...', 'info');
-        
-        // Блокируем кнопку
+        if (!currentTeamId) {
+            utils.showMessage('message', 'Сначала выберите команду', 'error');
+            return;
+        }
+
+        const duration = parseInt(document.getElementById('sprintDuration').value);
+        const firstStart = document.getElementById('firstSprintStart').value;
+
+        if (!duration || !firstStart) {
+            utils.showMessage('message', 'Заполните все поля', 'error');
+            return;
+        }
+
+        if (!confirm(`Сгенерировать спринты с ${firstStart}?`)) return;
+
+        utils.showMessage('message', 'Генерация...', 'info');
+
         if (generateBtn) {
             generateBtn.textContent = '⏳ Генерация...';
             generateBtn.disabled = true;
-            generateBtn.style.opacity = '0.7';
-            generateBtn.style.cursor = 'not-allowed';
         }
-        
-        // 1. Генерируем спринты
-        console.log("📡 Шаг 1: Генерация спринтов");
+
         const result = await api.generateSprints(currentTeamId, {
-            duration: duration,
-            firstStart: firstStart
+            duration,
+            firstStart
         });
-        
-        console.log(`✅ Сгенерировано ${result.length} спринтов`);
-        
-        // 2. Рассчитываем рабочие дни
-        console.log("📡 Шаг 2: Расчет рабочих дней");
-        await api.calculateWorkingDays(currentTeamId);
-        
-        // 3. Загружаем обновленный список
-        console.log("📡 Шаг 3: Загрузка списка");
+
+        const count = Array.isArray(result) ? result.length : 0;
+
         await loadSprintsList();
-        
-        // Разблокируем кнопку
-        if (generateBtn) {
-            generateBtn.textContent = 'Сгенерировать спринты';
-            generateBtn.disabled = false;
-            generateBtn.style.opacity = '1';
-            generateBtn.style.cursor = 'pointer';
-        }
-        
-        utils.showMessage('message', `✅ Сгенерировано ${result.length} спринтов с расчетом рабочих дней!`, 'success');
-        
+
+        utils.showMessage(
+            'message',
+            `✅ Сгенерировано ${count} спринтов`,
+            'success'
+        );
+
     } catch (error) {
-        console.error('❌ Ошибка:', error);
-        utils.showMessage('message', '❌ Ошибка: ' + error.message, 'error');
-        
-        // Разблокируем кнопку в случае ошибки
-        const generateBtn = document.getElementById('generateSprintsBtn');
+        console.error(error);
+
+        utils.showMessage(
+            'message',
+            error.message.includes('500')
+                ? 'Ошибка сервера 😢'
+                : error.message,
+            'error'
+        );
+
+    } finally {
+        isGenerating = false;
+
         if (generateBtn) {
             generateBtn.textContent = 'Сгенерировать спринты';
             generateBtn.disabled = false;
-            generateBtn.style.opacity = '1';
-            generateBtn.style.cursor = 'pointer';
         }
     }
 }

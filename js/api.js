@@ -8,16 +8,15 @@ const API = {
     
     // Универсальный метод для запросов
     async request(endpoint, method = 'GET', data = null) {
-        let accessToken = localStorage.getItem('accessToken');
 
         const makeRequest = () => {
-            const accessToken = localStorage.getItem('accessToken'); // 🔥 ВАЖНО
+            const token = localStorage.getItem('accessToken');
 
             return fetch(endpoint, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
+                    ...(token && { Authorization: `Bearer ${token}` })
                 },
                 body: data ? JSON.stringify(data) : null
             });
@@ -25,7 +24,7 @@ const API = {
 
         let response = await makeRequest();
 
-    // 🔥 если токен умер
+        // 🔥 refresh
         if (response.status === 401) {
             const refreshToken = localStorage.getItem('refreshToken');
 
@@ -44,17 +43,19 @@ const API = {
             const refreshData = await refreshRes.json();
 
             localStorage.setItem('accessToken', refreshData.accessToken);
-            accessToken = refreshData.accessToken;
+            localStorage.setItem('refreshToken', refreshData.refreshToken);
 
-            // 🔁 повторяем запрос
+            // 🔁 повтор запроса
             response = await makeRequest();
         }
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+            throw new Error(result.msg || `HTTP ${response.status}`);
         }
 
-        return response.json();
+        return result;
     },
     
     // ===== АВТОРИЗАЦИЯ =====
@@ -70,54 +71,70 @@ const API = {
 
     return res;
     },
-    
-// ===== КОМАНДЫ =====
 
-// Получить все команды
-async getTeams() {
-    return this.request('/api/teams');
-},
+    async logout() {
+        const refreshToken = localStorage.getItem('refreshToken');
 
-// Создать команду
-async createTeam(teamData) {
-    console.log("📡 API.createTeam вызван:", teamData);
-    return this.request('/api/teams', 'POST', teamData);
-},
+        try {
+            await this.request('/api/auth/logout', 'POST', {
+                refreshToken
+            });
+        } catch (e) {
+            console.warn("Logout API ошибка:", e.message);
+        }
 
-// Получить команды пользователя
-async getUserTeams(userId) {
-    return this.request(`/api/teams/user/${userId}`);
-},
+        localStorage.clear();
 
-// ===== СОТРУДНИКИ =====
+        window.location.href = '/login.html';
+    },
 
-// Получить сотрудников команды
-async getEmployees(teamId) {
-    console.log(`📡 API.getEmployees вызван для teamId: ${teamId}`);
-    try {
-        const result = await this.request(`/api/employees/${teamId}`);
-        console.log(`📡 API.getEmployees вернул: ${result.length} сотрудников`);
-        return result;
-    } catch (error) {
-        console.error(`❌ API.getEmployees ошибка:`, error);
-        throw error;
-    }
-},
+    // ===== КОМАНДЫ =====
 
-// Добавить сотрудника
-async addEmployee(employeeData) {
-    return this.request('/api/employees', 'POST', employeeData);
-},
+    // Получить все команды
+    async getTeams() {
+        return this.request('/api/teams');
+    },
 
-// Обновить сотрудника
-async updateEmployee(id, employeeData) {
-    return this.request(`/api/employees/${id}`, 'PUT', employeeData);
-},
+    // Создать команду
+    async createTeam(teamData) {
+        console.log("📡 API.createTeam вызван:", teamData);
+        return this.request('/api/teams', 'POST', teamData);
+    },
 
-// Удалить сотрудника
-async deleteEmployee(id) {
-    return this.request(`/api/employees/${id}`, 'DELETE');
-},
+    // Получить команды пользователя
+    async getUserTeams(userId) {
+        return this.request(`/api/teams/user/${userId}`);
+    },
+
+    // ===== СОТРУДНИКИ =====
+
+    // Получить сотрудников команды
+    async getEmployees(teamId) {
+        console.log(`📡 API.getEmployees вызван для teamId: ${teamId}`);
+        try {
+            const result = await this.request(`/api/employees/${teamId}`);
+            console.log(`📡 API.getEmployees вернул: ${result.length} сотрудников`);
+            return result;
+        } catch (error) {
+            console.error(`❌ API.getEmployees ошибка:`, error);
+            throw error;
+        }
+    },
+
+    // Добавить сотрудника
+    async addEmployee(employeeData) {
+        return this.request('/api/employees', 'POST', employeeData);
+    },
+
+    // Обновить сотрудника
+    async updateEmployee(id, employeeData) {
+        return this.request(`/api/employees/${id}`, 'PUT', employeeData);
+    },
+
+    // Удалить сотрудника
+    async deleteEmployee(id) {
+        return this.request(`/api/employees/${id}`, 'DELETE');
+    },
 
 // ===== ОТСУТСТВИЯ =====
 
@@ -133,96 +150,74 @@ async getAbsences(teamId) {
         }
     },
     
-// Добавить отсутствие
-async addAbsence(absenceData) {
-        console.log("📡 API.addAbsence вызван:", absenceData);
-        return this.request('/api/absences', 'POST', absenceData);
+    // Добавить отсутствие
+    async addAbsence(absenceData) {
+            console.log("📡 API.addAbsence вызван:", absenceData);
+            return this.request('/api/absences', 'POST', absenceData);
+        },
+        
+    // Обновить отсутствие
+    async updateAbsence(id, absenceData) {
+            console.log(`📡 API.updateAbsence вызван для ${id}:`, absenceData);
+            return this.request(`/api/absences/${id}`, 'PUT', absenceData);
+        },
+        
+    // Удалить отсутствие
+    async deleteAbsence(id) {
+            console.log(`📡 API.deleteAbsence вызван для ${id}`);
+            return this.request(`/api/absences/${id}`, 'DELETE');
+        },
+
+    // ===== СПРИНТЫ =====
+
+    // Получить настройки команды
+    async getSettings(teamId) {
+        return this.request(`/api/settings/${teamId}`);
     },
-    
-// Обновить отсутствие
-async updateAbsence(id, absenceData) {
-        console.log(`📡 API.updateAbsence вызван для ${id}:`, absenceData);
-        return this.request(`/api/absences/${id}`, 'PUT', absenceData);
-    },
-    
-// Удалить отсутствие
-async deleteAbsence(id) {
-        console.log(`📡 API.deleteAbsence вызван для ${id}`);
-        return this.request(`/api/absences/${id}`, 'DELETE');
+
+    // Сохранить настройки
+    async saveSettings(teamId, settingsData) {
+        return this.request(`/api/settings/${teamId}`, 'POST', settingsData);
     },
 
-// ===== НАСТРОЙКИ =====
-    
-// Получить настройки
-async getSettings() {
-    return this.request('/api/settings');
-},
-    
-// Сохранить настройки
-async saveSettings(settingsData) {
-    return this.request('/api/settings', 'POST', settingsData);
-},
+    // Получить спринты команды
+    async getSprints(teamId) {
+        return this.request(`/api/sprints/${teamId}`);
+    },
 
-// ===== НАСТРОЙКИ СПРИНТОВ =====
+    // Сгенерировать спринты
+    async generateSprints(teamId, params) {
+        console.log("📡 API.generateSprints вызван:", { teamId, params });
+        return this.request(`/api/sprints/generate/${teamId}`, 'POST', params);
+    },
 
-// Получить настройки команды
-async getSettings(teamId) {
-    return this.request(`/api/settings/${teamId}`);
-},
+    // ===== ПРАЗДНИКИ =====
 
-// Сохранить настройки
-async saveSettings(teamId, settingsData) {
-    return this.request(`/api/settings/${teamId}`, 'POST', settingsData);
-},
+    // Получить праздники команды
+    async getHolidays(teamId) {
+        return this.request(`/api/holidays/${teamId}`);
+    },
 
-// Получить спринты команды
-async getSprints(teamId) {
-    return this.request(`/api/sprints/${teamId}`);
-},
+    // Добавить праздник
+    async addHoliday(teamId, holidayData) {
+        return this.request(`/api/holidays/${teamId}`, 'POST', holidayData);
+    },
 
-// Сгенерировать спринты
-async generateSprints(teamId, params) {
-    console.log("📡 API.generateSprints вызван:", { teamId, params });
-    return this.request(`/api/sprints/generate/${teamId}`, 'POST', params);
-},
+    // Удалить праздник
+    async deleteHoliday(id) {
+        return this.request(`/api/holidays/${id}`, 'DELETE');
+    },
 
-// ===== ПРАЗДНИКИ =====
+    // Пересчитать рабочие дни
+    async calculateWorkingDays(teamId) {
+        return this.request(`/api/sprints/calculate-days/${teamId}`, 'POST');
+    },
 
-// Получить праздники команды
-async getHolidays(teamId) {
-    return this.request(`/api/holidays/${teamId}`);
-},
+    async copySprintsFromYear(teamId, year) {
+        return this.request(`/api/sprints/copy/${teamId}`, 'POST', { year });
+    },
 
-// Добавить праздник
-async addHoliday(teamId, holidayData) {
-    return this.request(`/api/holidays/${teamId}`, 'POST', holidayData);
-},
+    };
 
-// Удалить праздник
-async deleteHoliday(id) {
-    return this.request(`/api/holidays/${id}`, 'DELETE');
-},
-
-// Пересчитать рабочие дни
-async calculateWorkingDays(teamId) {
-    return this.request(`/api/sprints/calculate-days/${teamId}`, 'POST');
-},
-
-// Обновить сотрудника
-async updateEmployee(id, employeeData) {
-    return this.request(`/api/employees/${id}`, 'PUT', employeeData);
-},
-
-// Обновить отсутствие
-async updateAbsence(id, absenceData) {
-    return this.request(`/api/absences/${id}`, 'PUT', absenceData);
-},
-
-async copySprintsFromYear(teamId, year) {
-    return this.request(`/api/sprints/copy/${teamId}`, 'POST', { year });
-},
-
-};
-
-// Создаем глобальную переменную
-const api = API;
+    // Создаем глобальную переменную
+    const api = API;
