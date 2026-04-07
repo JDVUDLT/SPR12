@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Перенаправляем на вход через 2 секунды
                 setTimeout(() => {
                     window.location.href = '/login';
-                }, 20);
+                }, 1);
             } else {
                 utils.showMessage('message', result.msg || 'Ошибка регистрации', 'error');
             }

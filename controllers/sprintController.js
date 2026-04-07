@@ -9,6 +9,32 @@ async function getSprints(req, res) {
     }
 }
 
+async function generateSprints(req, res) {
+    try {
+        console.log("🔥 Controller: generateSprints");
+        console.log("teamId:", req.params.teamId);
+        console.log("body:", req.body);
+
+        const teamId = req.params.teamId;
+        const { duration, firstStart } = req.body;
+
+        const result = await service.generateSprints({
+            teamId,
+            duration,
+            firstStart
+        });
+
+        res.json(result);
+
+    } catch (error) {
+        console.error("❌ Controller error:", error.message);
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+}
+
 async function calculateDays(req, res) {
     try {
         const data = await service.calculateDays(req.params.teamId);
@@ -38,5 +64,6 @@ async function copySprints(req, res) {
 module.exports = {
     calculateDays,
     copySprints,
-    getSprints   
+    getSprints,  
+    generateSprints 
 };
