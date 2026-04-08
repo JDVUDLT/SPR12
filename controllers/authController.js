@@ -57,11 +57,15 @@ async function refresh(req, res) {
     try {
         const { refreshToken } = req.body;
 
-        const tokens = await service.refresh(refreshToken);
+        const tokens = await authService.refresh(refreshToken);
 
         res.json(tokens);
+
     } catch (e) {
-        res.status(401).json({ message: e.message });
+        res.status(401).json({
+            success: false,
+            msg: e.message
+        });
     }
 }
 

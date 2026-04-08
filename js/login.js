@@ -82,28 +82,21 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("📥 Ответ от сервера:", result);
             
             if (result.success) {
-                utils.showMessage('message', 'Успешный вход! Перенаправление...', 'success');
+                console.log("✅ Успешный вход!");
 
-                if (!result.accessToken || !result.refreshToken) {
-                    throw new Error("Токены не получены с сервера");
-                }
-
-                // 💾 сохраняем токены
+                // сохраняем токены
                 localStorage.setItem('accessToken', result.accessToken);
                 localStorage.setItem('refreshToken', result.refreshToken);
 
-                console.log("✅ TOKENS:", {
-                    access: result.accessToken,
-                    refresh: result.refreshToken
-                });
+                // 🔹 получаем пользователя
+                const me = await api.request('/api/auth/me');
+                console.log("Пользователь:", me.user);
 
-                // 👤 пользователь
-                auth.setUser(result.user);
-
+                // перенаправление
                 setTimeout(() => {
                     window.location.href = "/";
-                }, 1000);
-            } 
+                }, 10);
+            }
             else {
                 console.log("❌ Ошибка входа:", result.msg);
                 if (typeof utils !== 'undefined' && utils.showMessage) {

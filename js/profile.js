@@ -7,11 +7,10 @@ console.log("📁 profile.js загружен");
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
     // Проверяем, что мы не на странице логина
-    if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-        if (!auth.isAuthenticated()) {
-            return;
-        }
-    }
+
+    await auth.ensureAuth();
+
+    console.log('✅ Пользователь проверен');
     console.log("✅ DOM загружен");
     
     // Проверяем зависимости
