@@ -22,10 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("   - auth:", typeof auth !== 'undefined' ? '✅' : '❌');
     console.log("   - utils:", typeof utils !== 'undefined' ? '✅' : '❌');
     
-    // Проверяем авторизацию
-    if (!auth.requireAuth()) {
-        return; // auth.requireAuth() сам перенаправит на /login
-    }
     
     // Загружаем команды
     await loadTeams();
@@ -128,7 +124,7 @@ async function loadTeams() {
         console.log("📋 Загрузка команд...");
         utils.showMessage('message', 'Загрузка команд...', 'info');
         
-        const userId = auth.getUserId();
+        const userId = await auth.getUserId();
         const teams = await api.getTeams();
         
         // Фильтруем команды пользователя (если нужно)

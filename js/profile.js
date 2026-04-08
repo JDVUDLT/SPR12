@@ -19,11 +19,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log("   - auth:", typeof auth !== 'undefined' ? '✅' : '❌');
     console.log("   - utils:", typeof utils !== 'undefined' ? '✅' : '❌');
     
-    // Проверяем авторизацию
-    if (!auth.requireAuth()) {
-        return; // auth.requireAuth() сам перенаправит на /login
-    }
-    
     // Загружаем данные пользователя
     await loadUserProfile();
     
@@ -36,7 +31,7 @@ async function loadUserProfile() {
     try {
         console.log("📋 Загрузка профиля пользователя");
         
-        const user = auth.getUser();
+        const user = await auth.getUser();
         if (!user) {
             throw new Error("Пользователь не найден");
         }

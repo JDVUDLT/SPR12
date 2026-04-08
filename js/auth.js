@@ -1,3 +1,4 @@
+let currentUser = null;
 const auth = {
     getAccessToken() {
         return localStorage.getItem('accessToken');
@@ -15,9 +16,18 @@ const auth = {
     async getUser() {
         if (!currentUser) {
             const res = await api.request('/api/auth/me');
-            currentUser = res.user;
+
+            console.log("👤 /me ответ:", res);
+
+            currentUser = res.user || res; // ← ВАЖНО
         }
+
         return currentUser;
+    },
+
+    async getUserId() {
+    const user = await this.getUser();
+    return user.id;
     },
 
     clearUser() {
