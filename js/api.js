@@ -7,55 +7,44 @@ const API = {
     baseUrl: '',
     
     // Универсальный метод для запросов
-    async request(endpoint, method = 'GET', data = null) {
+    async request(url, method = 'GET', body = null) {
+        const token = auth.getAccessToken();
 
-        const makeRequest = () => {
-            const token = localStorage.getItem('accessToken');
+        const res = await fetch(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: body ? JSON.stringify(body) : null
+        });
 
-            return fetch(endpoint, {
-                method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token && { Authorization: `Bearer ${token}` })
-                },
-                body: data ? JSON.stringify(data) : null
-            });
-        };
+        // 🔥 ЕСЛИ ACCESS УМЕР
+        if (res.status === 401) {
+            console.log('🔁 Пробуем refresh...');
 
-        let response = await makeRequest();
+            try {
+                const newToken = await auth.refreshTokens();
 
-        // 🔥 refresh
-        if (response.status === 401) {
-            const refreshToken = localStorage.getItem('refreshToken');
+                // 🔁 ПОВТОРЯЕМ ЗАПРОС
+                const retryRes = await fetch(url, {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${newToken}`
+                    },
+                    body: body ? JSON.stringify(body) : null
+                });
 
-            const refreshRes = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refreshToken })
-            });
+                return retryRes.json();
 
-            if (!refreshRes.ok) {
-                localStorage.clear();
-                window.location.href = '/login.html';
-                return;
+            } catch (e) {
+                auth.logout();
+                throw new Error('Сессия истекла');
             }
-
-            const refreshData = await refreshRes.json();
-
-            localStorage.setItem('accessToken', refreshData.accessToken);
-            localStorage.setItem('refreshToken', refreshData.refreshToken);
-
-            // 🔁 повтор запроса
-            response = await makeRequest();
         }
 
-        const result = await response.json();
-
-        if (!response.ok || result.success === false) {
-            throw new Error(result.msg || `HTTP ${response.status}`);
-        }
-
-        return result;
+        return res.json();
     },
     
     // ===== АВТОРИЗАЦИЯ =====
@@ -87,6 +76,8 @@ const API = {
 
         window.location.href = '/login.html';
     },
+
+    
 
     // ===== КОМАНДЫ =====
 

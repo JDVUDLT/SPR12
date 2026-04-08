@@ -163,48 +163,34 @@ async function refresh(refreshToken) {
 
     const tokens = await safeReadJSON(REFRESH_FILE);
 
-    const exists = tokens.find(t => t.token === refreshToken);
+    const found = tokens.find(t => t.token === refreshToken);
 
-    if (!exists) {
-        throw new Error("Refresh токен не найден");
+    if (!found) {
+        throw new Error("Токен не найден");
     }
 
-    let payload;
-
+    let userData;
     try {
-        payload = jwt.verify(refreshToken, REFRESH_SECRET);
+        userData = jwt.verify(refreshToken, SECRET_KEY);
     } catch (e) {
-        throw new Error("Refresh токен истёк");
+        throw new Error("Refresh токен истек");
     }
-
-    // 🔥 rotation (очень важно)
-    const newTokens = tokens.filter(t => t.token !== refreshToken);
 
     const newAccessToken = jwt.sign(
-        { id: payload.id },
-        ACCESS_SECRET,
+        {
+            id: userData.id,
+            log: userData.log,
+            role: userData.role
+        },
+        SECRET_KEY,
         { expiresIn: '15m' }
     );
 
-    const newRefreshToken = jwt.sign(
-        { id: payload.id },
-        REFRESH_SECRET,
-        { expiresIn: '7d' }
-    );
-
-    newTokens.push({
-        token: newRefreshToken,
-        userId: payload.id
-    });
-
-    await fs.writeJSON(REFRESH_FILE, newTokens);
-
     return {
         accessToken: newAccessToken,
-        refreshToken: newRefreshToken
+        refreshToken
     };
 }
-
 
 module.exports = {
     logout,
