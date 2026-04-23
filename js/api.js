@@ -17,9 +17,12 @@ window.api = {
 
         const res = await fetch(url, {
             method,
-            headers,
-            credentials: 'include',
-            body: body ? JSON.stringify(body) : null
+            credentials: 'include', //
+            headers: {
+                'Content-Type': 'application/json',
+                ...headers
+            },
+            body: body ? JSON.stringify(body) : undefined
         });
 
         // 🔥 AUTO REFRESH

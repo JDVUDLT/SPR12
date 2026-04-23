@@ -133,36 +133,45 @@ async function loadTeams() {
     try {
         console.log("📋 Загрузка команд...");
         utils.showMessage('message', 'Загрузка команд...', 'info');
-        const user = await api.me();
-        const userId = user.user.id;
+
+        const meRes = await api.me();
+
+        if (!meRes.success) {
+            auth.logout();
+            return;
+        }
+
+        const user = meRes.user;
+        const userId = user.id;
+
         const teams = await api.getTeams();
-        
-        // Фильтруем команды пользователя (если нужно)
+
+        // ✅ используем userId, а не auth.getUserId()
         const userTeams = teams.filter(t =>
-            String(t.ownerId) === String(auth.getUserId())
+            String(t.ownerId) === String(userId)
         );
-        
+
         console.log(`📋 Загружено команд: ${userTeams.length}`);
-        
+
         const select = document.getElementById('teamSelect');
         select.innerHTML = '<option value="">-- Выберите команду --</option>';
-        
+
         userTeams.forEach(team => {
             const option = document.createElement('option');
             option.value = team.id;
             option.textContent = team.name;
             select.appendChild(option);
         });
-        
-        // Если есть сохраненная команда, выбираем её
+
         const lastTeamId = localStorage.getItem('lastTeamId');
-        if (lastTeamId && userTeams.some(t => t.id === lastTeamId)) {
+
+        if (lastTeamId && userTeams.some(t => String(t.id) === String(lastTeamId))) {
             select.value = lastTeamId;
             await loadTeamData();
         }
-        
-        utils.showMessage('message', '', 'info'); // Очищаем сообщение
-        
+
+        utils.showMessage('message', '', 'info');
+
     } catch (error) {
         console.error('❌ Ошибка загрузки команд:', error);
         utils.showMessage('message', 'Ошибка загрузки команд', 'error');
@@ -196,7 +205,7 @@ async function createTeam() {
         console.log("📋 Создание команды:", teamName);
         utils.showMessage('message', 'Создание команды...', 'info');
         
-        const userId = auth.getUser().id;
+        const userId = (await api.me()).user.id;
         
         const newTeam = await api.createTeam({
             name: teamName,
@@ -271,26 +280,6 @@ async function loadTeamData() {
     await updateTeamInfo();    
     await loadEmployees();
     await loadAbsences();
-}
-
-// Загрузить сотрудников команды
-async function loadEmployees() {
-    if (!currentTeamId) return;
-    
-    try {
-        console.log(`📋 Загрузка сотрудников команды ${currentTeamId}`);
-        
-        const employees = await api.getEmployees(currentTeamId);
-        allEmployees = employees; // Сохраняем всех сотрудников
-        console.log(`📋 Загружено сотрудников: ${employees.length}`);
-        
-        // Применяем фильтры (если есть)
-        applyFiltersAndSearch();
-        
-    } catch (error) {
-        console.error('❌ Ошибка загрузки сотрудников:', error);
-        utils.showMessage('message', 'Ошибка загрузки сотрудников', 'error');
-    }
 }
 
 // Отобразить сотрудников в таблице
@@ -683,27 +672,6 @@ async function addAbsence() {
             addBtn.textContent = 'Сохранить';
             addBtn.disabled = false;
         }
-    }
-}
-
-// Удалить отсутствие
-async function deleteAbsence(id) {
-    if (!confirm('Вы уверены, что хотите удалить запись об отсутствии?')) {
-        return;
-    }
-    
-    try {
-        console.log(`📋 Удаление отсутствия: ${id}`);
-        utils.showMessage('message', 'Удаление...', 'info');
-        
-        await api.deleteAbsence(id);
-        await loadAbsences();
-        
-        utils.showMessage('message', 'Отсутствие удалено', 'success');
-        
-    } catch (error) {
-        console.error('❌ Ошибка удаления отсутствия:', error);
-        utils.showMessage('message', 'Ошибка удаления отсутствия', 'error');
     }
 }
 
@@ -1220,36 +1188,6 @@ function addClearButtonToSearch() {
     }
 }
 
-// Сменить страницу
-function changePage(page) {
-    if (page < 1) return;
-    const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
-    if (page > totalPages) return;
-    
-    currentPage = page;
-    displayEmployeesPaginated();
-}
-
-// Настройка обработчиков фильтров
-function setupFilterListeners() {
-    const searchInput = document.getElementById('searchEmployee');
-    const filterRole = document.getElementById('filterRole');
-    
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            console.log("🔍 Поиск:", searchInput.value);
-            applyFiltersAndSearch();
-        });
-    }
-    
-    if (filterRole) {
-        filterRole.addEventListener('change', () => {
-            console.log("📋 Фильтр по роли:", filterRole.value);
-            applyFiltersAndSearch();
-        });
-    }
-}
-
 // ===== УВЕДОМЛЕНИЯ О ПРЕДСТОЯЩИХ ОТПУСКАХ =====
 function checkUpcomingAbsences() {
     if (!currentTeamId) return;
@@ -1361,24 +1299,8 @@ function calculateAbsenceDaysInSprint(absences, sprint) {
     return days;
 }
 
-function escapeHtml(text) {
-    if (!text) return '';
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
 
 // Вызываем проверку при загрузке
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(checkUpcomingAbsences, 2000);
 });
-
-// Сменить страницу
-function changePage(page) {
-    if (page < 1) return;
-    const totalPages = Math.ceil(allEmployees.length / itemsPerPage);
-    if (page > totalPages) return;
-    
-    currentPage = page;
-    applyFilters();
-}
