@@ -10,8 +10,18 @@ let currentTeamId = null;
 
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log("🚀 init auth");
 
-    await auth.ensureAuth();
+    const ok = await auth.init();
+
+    if (!ok) {
+        auth.logout();
+        return;
+    }
+
+    // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
+    const me = await api.request('/api/auth/me');
+    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
     
@@ -131,7 +141,7 @@ async function loadUserTeams() {
     try {
         console.log("📋 Загрузка команд пользователя");
         
-        const userId = await auth.getUserId();
+        const userId = await auth.getUser().id;
         const teams = await api.getTeams();
         
         // Фильтруем команды пользователя

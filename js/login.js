@@ -79,23 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Отправляем запрос через API
             const result = await api.login({ log, pass });
-            console.log("📥 Ответ от сервера:", result);
-            
-            if (result.success) {
-                console.log("✅ Успешный вход!");
 
-                // сохраняем токены
-                localStorage.setItem('accessToken', result.accessToken);
-                localStorage.setItem('refreshToken', result.refreshToken);
-
-                // 🔹 получаем пользователя
-                const me = await api.request('/api/auth/me');
-                console.log("Пользователь:", me.user);
-
-                // перенаправление
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 10);
+            if (result.accessToken) {
+                auth.setAccessToken(result.accessToken);
+                window.location.href = '/';
             }
             else {
                 console.log("❌ Ошибка входа:", result.msg);
@@ -105,7 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     alert(result.msg || 'Неверный логин или пароль');
                 }
             }
-            
         } catch (error) {
             console.error('🔥 Ошибка:', error);
             if (typeof utils !== 'undefined' && utils.showMessage) {

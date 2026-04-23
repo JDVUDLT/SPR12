@@ -119,15 +119,25 @@
                 </div>
             </div>
         </div>
+
+        <div class="sessions-container">
+            <h2>🔐 Активные устройства</h2>
+
+            <div id="sessionsList"></div>
+
+            <button id="logoutAllBtn" class="danger-btn">
+                Выйти со всех устройств
+            </button>
+        </div>
         
         <!-- Блок для сообщений -->
         <div id="message" class="message"></div>
     </div>
 
     <!-- Подключаем скрипты в правильном порядке -->
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
     <script src="/js/utils.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/api.js"></script>
     <script src="/js/profile.js"></script>
 </body>
 </html>

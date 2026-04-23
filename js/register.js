@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Перенаправляем на вход через 2 секунды
                 setTimeout(() => {
-                    window.location.href = '/login';
-                }, 1);
+                    window.location.href = '/';
+                }, 10);
             } else {
                 utils.showMessage('message', result.msg || 'Ошибка регистрации', 'error');
             }
