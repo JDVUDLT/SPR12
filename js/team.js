@@ -8,9 +8,19 @@ console.log("📁 team.js загружен");
 let currentTeamId = null;
 
 // Проверка авторизации при загрузке
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', async () => {  
+    console.log("🚀 init auth");
 
-    await auth.ensureAuth();
+    const ok = await auth.init();
+
+    if (!ok) {
+        auth.logout();
+        return;
+    }
+
+    // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
+    const me = await api.request('/api/auth/me');
+    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
 
@@ -123,12 +133,14 @@ async function loadTeams() {
     try {
         console.log("📋 Загрузка команд...");
         utils.showMessage('message', 'Загрузка команд...', 'info');
-        
-        const userId = await auth.getUserId();
+        const user = await api.me();
+        const userId = user.user.id;
         const teams = await api.getTeams();
         
         // Фильтруем команды пользователя (если нужно)
-        const userTeams = teams.filter(t => t.ownerId === userId);
+        const userTeams = teams.filter(t =>
+            String(t.ownerId) === String(auth.getUserId())
+        );
         
         console.log(`📋 Загружено команд: ${userTeams.length}`);
         
@@ -184,7 +196,7 @@ async function createTeam() {
         console.log("📋 Создание команды:", teamName);
         utils.showMessage('message', 'Создание команды...', 'info');
         
-        const userId = auth.getUserId();
+        const userId = auth.getUser().id;
         
         const newTeam = await api.createTeam({
             name: teamName,

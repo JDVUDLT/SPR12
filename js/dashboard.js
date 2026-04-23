@@ -5,8 +5,18 @@ let currentYear = new Date().getFullYear();
 
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log("🚀 init auth");
 
-    await auth.ensureAuth();
+    const ok = await auth.init();
+
+    if (!ok) {
+        auth.logout();
+        return;
+    }
+
+    // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
+    const me = await api.request('/api/auth/me');
+    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
     console.log("✅ DOM загружен");
@@ -36,7 +46,7 @@ function initYearSelector() {
 // Загрузить команды пользователя
 async function loadUserTeams() {
     try {
-        const userId = await auth.getUserId();
+        const userId = await auth.getUser().id;
         const teams = await api.getTeams();
         const userTeams = teams.filter(t => t.ownerId === userId);
         

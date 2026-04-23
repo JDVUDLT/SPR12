@@ -6,23 +6,21 @@ console.log("📁 profile.js загружен");
 
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
-    // Проверяем, что мы не на странице логина
 
-    await auth.ensureAuth();
+    auth.init();
 
-    console.log('✅ Пользователь проверен');
-    console.log("✅ DOM загружен");
-    
-    // Проверяем зависимости
-    console.log("📦 Проверка зависимостей:");
-    console.log("   - api:", typeof api !== 'undefined' ? '✅' : '❌');
-    console.log("   - auth:", typeof auth !== 'undefined' ? '✅' : '❌');
-    console.log("   - utils:", typeof utils !== 'undefined' ? '✅' : '❌');
-    
-    // Загружаем данные пользователя
-    await loadUserProfile();
-    
-    // Навешиваем обработчики
+    const meRes = await api.me();
+
+    if (!meRes.success) {
+        auth.logout();
+        return;
+    }
+
+    const user = meRes.user;
+
+    console.log("USER:", user);
+
+    await loadUserProfile(user);
     setupEventListeners();
 });
 
@@ -34,9 +32,7 @@ async function loadUserProfile() {
         const user = await auth.getUser();
         if (!user) {
             throw new Error("Пользователь не найден");
-        }
-        
-        console.log("📋 Данные пользователя:", user);
+        }       
         
         // Отображаем профиль
         displayUserProfile(user);
@@ -281,3 +277,61 @@ async function changePassword() {
         utils.showMessage('message', 'Ошибка смены пароля', 'error');
     }
 }
+
+async function loadSessions() {
+    try {
+        const sessions = await api.getSessions();
+        const userAgent = navigator.userAgent;
+
+        const container = document.getElementById('sessionsList');
+        container.innerHTML = '';
+
+        sessions.forEach(session => {
+            const isCurrent = session.userAgent === userAgent;
+
+            const el = document.createElement('div');
+            el.className = 'session-card';
+
+            el.innerHTML = `
+                <div class="session-info">
+                    <div class="session-title">
+                        ${session.userAgent}
+                        ${isCurrent ? '<span class="current">(Это устройство)</span>' : ''}
+                    </div>
+                    <div class="session-meta">
+                        IP: ${session.ip || 'unknown'} <br>
+                        Последняя активность: ${new Date(session.lastUsed).toLocaleString()}
+                    </div>
+                </div>
+
+                ${!isCurrent ? `
+                    <button class="logout-btn" onclick="logoutSession('${session.id}')">
+                        Выйти
+                    </button>
+                ` : ''}
+            `;
+
+            container.appendChild(el);
+        });
+
+    } catch (e) {
+        console.error('Ошибка загрузки сессий:', e);
+    }
+}
+
+async function logoutSession(id) {
+    if (!confirm('Выйти из этого устройства?')) return;
+
+    await api.deleteSession(id);
+    loadSessions();
+}
+
+document.getElementById('logoutAllBtn').addEventListener('click', async () => {
+    if (!confirm('Выйти со всех устройств?')) return;
+
+    await api.deleteAllSessions();
+    auth.logout();
+});
+
+// загрузка
+loadSessions();

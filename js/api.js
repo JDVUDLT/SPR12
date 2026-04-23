@@ -1,214 +1,186 @@
 // ======================================
-// api.js - Все запросы к серверу
+// api.js - Stable Auth + Refresh System
 // ======================================
 
-const API = {
-    // Базовый URL (пустой, так как на том же сервере)
-    baseUrl: '',
-    
-    // Универсальный метод для запросов
-    async request(url, method = 'GET', body = null) {
+window.api = {
+
+    async request(url, method = 'GET', body = null, retry = false) {
         const token = auth.getAccessToken();
+
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
 
         const res = await fetch(url, {
             method,
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
+            headers,
+            credentials: 'include',
             body: body ? JSON.stringify(body) : null
         });
 
-        // 🔥 ЕСЛИ ACCESS УМЕР
-        if (res.status === 401) {
-            console.log('🔁 Пробуем refresh...');
-
-            try {
-                const newToken = await auth.refreshTokens();
-
-                // 🔁 ПОВТОРЯЕМ ЗАПРОС
-                const retryRes = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${newToken}`
-                    },
-                    body: body ? JSON.stringify(body) : null
-                });
-
-                return retryRes.json();
-
-            } catch (e) {
-                auth.logout();
-                throw new Error('Сессия истекла');
-            }
-        }
-
-        return res.json();
-    },
-    
-    // ===== АВТОРИЗАЦИЯ =====
-    
-    // Регистрация
-    register(data) {
-    return this.request('/api/auth/register', 'POST', data);
-    },
-    
-    // Вход
-    async login(credentials) {
-    const res = await this.request('/api/auth/login', 'POST', credentials);
-
-    return res;
-    },
-
-    async logout() {
-        const refreshToken = localStorage.getItem('refreshToken');
-
-        try {
-            await this.request('/api/auth/logout', 'POST', {
-                refreshToken
+        // 🔥 AUTO REFRESH
+        if (res.status === 401 && !retry) {
+            const refresh = await fetch('/api/auth/refresh', {
+                method: 'POST',
+                credentials: 'include'
             });
-        } catch (e) {
-            console.warn("Logout API ошибка:", e.message);
+
+            if (!refresh.ok) {
+                auth.logout();
+                throw new Error('Session expired');
+            }
+
+            const data = await refresh.json();
+
+            auth.setAccessToken(data.accessToken);
+
+            return this.request(url, method, body, true);
         }
 
-        localStorage.clear();
-
-        window.location.href = '/login.html';
+        const data = await res.json();
+        return data;
     },
 
-    
+    me() {
+        return this.request('/api/auth/me');
+    },
 
-    // ===== КОМАНДЫ =====
-
-    // Получить все команды
-    async getTeams() {
+    getTeams() {
         return this.request('/api/teams');
     },
 
-    // Создать команду
-    async createTeam(teamData) {
-        console.log("📡 API.createTeam вызван:", teamData);
-        return this.request('/api/teams', 'POST', teamData);
+
+    // =========================
+    // AUTH
+    // =========================
+    login(data) {
+        return this.request('/api/auth/login', 'POST', data);
     },
 
-    // Получить команды пользователя
-    async getUserTeams(userId) {
+    register(data) {
+        return this.request('/api/auth/register', 'POST', data);
+    },
+
+    logout() {
+        return this.request('/api/auth/logout', 'POST')
+            .finally(() => {
+                auth.setAccessToken?.(null);
+                window.location.href = '/login.html';
+            });
+    },
+
+    // =========================
+    // TEAMS
+    // =========================
+    getTeams() {
+        return this.request('/api/teams');
+    },
+
+    createTeam(data) {
+        return this.request('/api/teams', 'POST', data);
+    },
+
+    getUserTeams(userId) {
         return this.request(`/api/teams/user/${userId}`);
     },
+    
 
-    // ===== СОТРУДНИКИ =====
-
-    // Получить сотрудников команды
-    async getEmployees(teamId) {
-        console.log(`📡 API.getEmployees вызван для teamId: ${teamId}`);
-        try {
-            const result = await this.request(`/api/employees/${teamId}`);
-            console.log(`📡 API.getEmployees вернул: ${result.length} сотрудников`);
-            return result;
-        } catch (error) {
-            console.error(`❌ API.getEmployees ошибка:`, error);
-            throw error;
-        }
+    // =========================
+    // EMPLOYEES
+    // =========================
+    getEmployees(teamId) {
+        return this.request(`/api/employees/${teamId}`);
     },
 
-    // Добавить сотрудника
-    async addEmployee(employeeData) {
-        return this.request('/api/employees', 'POST', employeeData);
+    addEmployee(data) {
+        return this.request('/api/employees', 'POST', data);
     },
 
-    // Обновить сотрудника
-    async updateEmployee(id, employeeData) {
-        return this.request(`/api/employees/${id}`, 'PUT', employeeData);
+    updateEmployee(id, data) {
+        return this.request(`/api/employees/${id}`, 'PUT', data);
     },
 
-    // Удалить сотрудника
-    async deleteEmployee(id) {
+    deleteEmployee(id) {
         return this.request(`/api/employees/${id}`, 'DELETE');
     },
 
-// ===== ОТСУТСТВИЯ =====
-
-async getAbsences(teamId) {
-        console.log(`📡 API.getAbsences вызван для teamId: ${teamId}`);
-        try {
-            const result = await this.request(`/api/absences/${teamId}`);
-            console.log(`📡 API.getAbsences вернул: ${result.length} записей`);
-            return result;
-        } catch (error) {
-            console.error(`❌ API.getAbsences ошибка:`, error);
-            throw error;
-        }
+    // =========================
+    // ABSENCES
+    // =========================
+    getAbsences(teamId) {
+        return this.request(`/api/absences/${teamId}`);
     },
-    
-    // Добавить отсутствие
-    async addAbsence(absenceData) {
-            console.log("📡 API.addAbsence вызван:", absenceData);
-            return this.request('/api/absences', 'POST', absenceData);
-        },
-        
-    // Обновить отсутствие
-    async updateAbsence(id, absenceData) {
-            console.log(`📡 API.updateAbsence вызван для ${id}:`, absenceData);
-            return this.request(`/api/absences/${id}`, 'PUT', absenceData);
-        },
-        
-    // Удалить отсутствие
-    async deleteAbsence(id) {
-            console.log(`📡 API.deleteAbsence вызван для ${id}`);
-            return this.request(`/api/absences/${id}`, 'DELETE');
-        },
 
-    // ===== СПРИНТЫ =====
+    addAbsence(data) {
+        return this.request('/api/absences', 'POST', data);
+    },
 
-    // Получить настройки команды
-    async getSettings(teamId) {
+    updateAbsence(id, data) {
+        return this.request(`/api/absences/${id}`, 'PUT', data);
+    },
+
+    deleteAbsence(id) {
+        return this.request(`/api/absences/${id}`, 'DELETE');
+    },
+
+    // =========================
+    // SPRINTS / SETTINGS
+    // =========================
+    getSettings(teamId) {
         return this.request(`/api/settings/${teamId}`);
     },
 
-    // Сохранить настройки
-    async saveSettings(teamId, settingsData) {
-        return this.request(`/api/settings/${teamId}`, 'POST', settingsData);
+    saveSettings(teamId, data) {
+        return this.request(`/api/settings/${teamId}`, 'POST', data);
     },
 
-    // Получить спринты команды
-    async getSprints(teamId) {
+    getSprints(teamId) {
         return this.request(`/api/sprints/${teamId}`);
     },
 
-    // Сгенерировать спринты
-    async generateSprints(teamId, params) {
-        console.log("📡 API.generateSprints вызван:", { teamId, params });
+    generateSprints(teamId, params) {
         return this.request(`/api/sprints/generate/${teamId}`, 'POST', params);
     },
 
-    // ===== ПРАЗДНИКИ =====
-
-    // Получить праздники команды
-    async getHolidays(teamId) {
-        return this.request(`/api/holidays/${teamId}`);
-    },
-
-    // Добавить праздник
-    async addHoliday(teamId, holidayData) {
-        return this.request(`/api/holidays/${teamId}`, 'POST', holidayData);
-    },
-
-    // Удалить праздник
-    async deleteHoliday(id) {
-        return this.request(`/api/holidays/${id}`, 'DELETE');
-    },
-
-    // Пересчитать рабочие дни
-    async calculateWorkingDays(teamId) {
+    calculateWorkingDays(teamId) {
         return this.request(`/api/sprints/calculate-days/${teamId}`, 'POST');
     },
 
-    async copySprintsFromYear(teamId, year) {
+    copySprintsFromYear(teamId, year) {
         return this.request(`/api/sprints/copy/${teamId}`, 'POST', { year });
     },
 
-    };
+    // =========================
+    // HOLIDAYS
+    // =========================
+    getHolidays(teamId) {
+        return this.request(`/api/holidays/${teamId}`);
+    },
 
-    // Создаем глобальную переменную
-    const api = API;
+    addHoliday(teamId, data) {
+        return this.request(`/api/holidays/${teamId}`, 'POST', data);
+    },
+
+    deleteHoliday(id) {
+        return this.request(`/api/holidays/${id}`, 'DELETE');
+    },
+
+    // =========================
+    // SESSIONS
+    // =========================
+    getSessions() {
+        return this.request('/api/auth/sessions');
+    },
+
+    deleteSession(id) {
+        return this.request(`/api/auth/sessions/${id}`, 'DELETE');
+    },
+
+    deleteAllSessions() {
+        return this.request('/api/auth/sessions', 'DELETE');
+    },
+};
