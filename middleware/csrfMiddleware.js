@@ -1,40 +1,19 @@
-const crypto = require('crypto');
+function csrfProtection(req, res, next) {
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
+        const origin = req.get('Origin');
+        const allowed = 'http://localhost:3000'; // твой домен
 
-function generateCSRFToken() {
-    return crypto.randomBytes(32).toString('hex');
-}
-
-// выдача токена
-function setCSRF(req, res, next) {
-    if (!req.cookies.csrfToken) {
-        const token = generateCSRFToken();
-
-        res.cookie('csrfToken', token, {
-            httpOnly: false, // ❗ важно
-            secure: true,
-            sameSite: 'strict'
-        });
+        if (origin && origin !== allowed) {
+            return res.status(403).json({ success: false, msg: 'CSRF blocked' });
+        }
+        
+        // fallback: если origin отсутствует (старые браузеры), можно проверить Referer
+        if (!origin) {
+            const referer = req.get('Referer');
+            if (referer && !referer.startsWith(allowed)) {
+                return res.status(403).json({ success: false, msg: 'CSRF blocked' });
+            }
+        }
     }
-
     next();
 }
-
-// проверка
-function verifyCSRF(req, res, next) {
-    const cookieToken = req.cookies.csrfToken;
-    const headerToken = req.headers['x-csrf-token'];
-
-    if (!cookieToken || !headerToken || cookieToken !== headerToken) {
-        return res.status(403).json({
-            success: false,
-            msg: 'CSRF token invalid'
-        });
-    }
-
-    next();
-}
-
-module.exports = {
-    setCSRF,
-    verifyCSRF
-};

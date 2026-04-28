@@ -601,72 +601,66 @@ async function loadEmployeesForSelect() {
 
 // Добавить отсутствие
 async function addAbsence() {
-    const employeeId = document.getElementById('absenceEmployee').value;
-    const type = document.getElementById('absenceType').value;
-    const startDate = document.getElementById('absenceStart').value;
-    const endDate = document.getElementById('absenceEnd').value;
-    const note = document.getElementById('absenceNote').value.trim();
-    
+    // Надёжное получение полей (обязательно приводим к строке)
+    const employeeId = String(document.getElementById('absenceEmployee')?.value ?? '');
+    const type = String(document.getElementById('absenceType')?.value ?? '');
+    const startDate = String(document.getElementById('absenceStart')?.value ?? '');
+    const endDate = String(document.getElementById('absenceEnd')?.value ?? '');
+    const note = String(document.getElementById('absenceNote')?.value ?? '').trim();
+
     console.log("📋 Добавление отсутствия:", { employeeId, type, startDate, endDate, note });
-    
+
+    // Проверка обязательных полей
     if (!employeeId) {
-        utils.showMessage('message', 'Выберите сотрудника', 'error');
+        alert('Выберите сотрудника из списка');
         return;
     }
-    
+    if (!currentTeamId) {
+        alert('Не выбрана команда – обновите страницу');
+        return;
+    }
+    if (!type) {
+        alert('Выберите тип отсутствия');
+        return;
+    }
     if (!startDate || !endDate) {
-        utils.showMessage('message', 'Выберите даты', 'error');
+        alert('Укажите даты начала и окончания');
         return;
     }
-    
     if (new Date(startDate) > new Date(endDate)) {
-        utils.showMessage('message', 'Дата начала не может быть позже даты окончания', 'error');
+        alert('Дата начала не может быть позже даты окончания');
         return;
     }
-    
+
     try {
         utils.showMessage('message', 'Добавление отсутствия...', 'info');
-        
-        // Блокируем кнопку
+
         const addBtn = document.getElementById('addAbsenceBtn');
         const originalText = addBtn.textContent;
         addBtn.textContent = '⏳ Сохранение...';
         addBtn.disabled = true;
-        
+
+        // 👇 Передаём teamId и employeeId
         const result = await api.addAbsence({
+            teamId: currentTeamId,
             employeeId: employeeId,
             type: type,
             startDate: startDate,
             endDate: endDate,
             note: note
         });
-        
+
         console.log("✅ Результат:", result);
-        
-        // Скрываем форму
+
         hideAddAbsenceForm();
-        
-        // Очищаем поля
-        document.getElementById('absenceNote').value = '';
-        document.getElementById('absenceStart').value = '';
-        document.getElementById('absenceEnd').value = '';
-        
-        // Обновляем список отсутствий
         await loadAbsences();
-        
-        // Обновляем статусы сотрудников
         await loadEmployees();
-        
+
         utils.showMessage('message', '✅ Отсутствие добавлено!', 'success');
-        
-        // Разблокируем кнопку
-        addBtn.textContent = originalText;
-        addBtn.disabled = false;
-        
     } catch (error) {
         console.error('❌ Ошибка добавления отсутствия:', error);
         utils.showMessage('message', '❌ Ошибка: ' + error.message, 'error');
-        
+    } finally {
         const addBtn = document.getElementById('addAbsenceBtn');
         if (addBtn) {
             addBtn.textContent = 'Сохранить';

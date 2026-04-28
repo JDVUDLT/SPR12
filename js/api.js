@@ -1,47 +1,41 @@
 // ======================================
 // api.js - Stable Auth + Refresh System
 // ======================================
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+const NO_REFRESH_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
 
 window.api = {
 
     async request(url, method = 'GET', body = null, retry = false) {
-        const token = auth.getAccessToken();
-
-        const headers = {
-            'Content-Type': 'application/json'
+        const options = {
+            method,
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: body ? JSON.stringify(body) : undefined
         };
 
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
+        let res = await fetch(url, options);
 
-        const res = await fetch(url, {
-            method,
-            credentials: 'include', //
-            headers: {
-                'Content-Type': 'application/json',
-                ...headers
-            },
-            body: body ? JSON.stringify(body) : undefined
-        });
-
-        // 🔥 AUTO REFRESH
-        if (res.status === 401 && !retry) {
-            const refresh = await fetch('/api/auth/refresh', {
+        // 🔁 Рефреш только для не-авторизационных маршрутов
+        if (res.status === 401 && !retry && !NO_REFRESH_PATHS.includes(url)) {
+            const refreshRes = await fetch('/api/auth/refresh', {
                 method: 'POST',
                 credentials: 'include'
             });
 
-            if (!refresh.ok) {
+            if (refreshRes.ok) {
+                // Токены обновились в куках, повторяем исходный запрос
+                res = await fetch(url, options);
+            } else {
+                // если рефреш не удался – действительно разлогиниваем
                 auth.logout();
                 throw new Error('Session expired');
             }
-
-            const data = await refresh.json();
-
-            auth.setAccessToken(data.accessToken);
-
-            return this.request(url, method, body, true);
         }
 
         const data = await res.json();

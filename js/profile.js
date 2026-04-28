@@ -6,40 +6,24 @@ console.log("📁 profile.js загружен");
 
 // Проверка авторизации при загрузке
 document.addEventListener('DOMContentLoaded', async () => {
-
-    auth.init();
-
-    const meRes = await api.me();
-
-    if (!meRes.success) {
+    const ok = await auth.init();
+    if (!ok) {
         auth.logout();
         return;
     }
 
-    const user = meRes.user;
-
-    console.log("USER:", user);
-
-    await loadUserProfile(user);
+    console.log('USER:', auth.user);
+    await loadUserProfile();
     setupEventListeners();
 });
 
 // Загрузить данные пользователя
 async function loadUserProfile() {
     try {
-        console.log("📋 Загрузка профиля пользователя");
-        
-        const user = await auth.getUser();
-        if (!user) {
-            throw new Error("Пользователь не найден");
-        }       
-        
-        // Отображаем профиль
+        const user = auth.user; // уже есть после init
+        if (!user) throw new Error('Пользователь не найден');
         displayUserProfile(user);
-        
-        // Загружаем статистику
         await loadUserStats(user);
-        
     } catch (error) {
         console.error('❌ Ошибка загрузки профиля:', error);
         utils.showMessage('message', 'Ошибка загрузки профиля', 'error');

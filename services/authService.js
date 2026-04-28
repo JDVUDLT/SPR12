@@ -211,16 +211,31 @@ async function refresh(refreshToken) {
 }
 
 async function getUserSessions(userId) {
-    const sessions = await safeReadJSON(SESSIONS_FILE);
-    return sessions.filter(s => s.userId === userId);
-}
-
-async function deleteSession(sessionId, userId) {
     let sessions = await safeReadJSON(SESSIONS_FILE);
+    const validSessions = [];
 
-    sessions = sessions.filter(s => !(s.id === sessionId && s.userId === userId));
+    for (const s of sessions) {
+        if (s.userId !== userId) continue;
 
-    await fs.writeJSON(SESSIONS_FILE, sessions, { spaces: 4 });
+        try {
+            jwt.verify(s.refreshToken, REFRESH_SECRET);
+            validSessions.push(s);
+        } catch (e) {
+            // токен истёк или невалиден – просто пропускаем
+        }
+    }
+
+    // Удаляем невалидные сессии пользователя из файла
+    const cleanedSessions = sessions.filter(s => {
+        if (s.userId !== userId) return true;
+        return validSessions.some(v => v.id === s.id);
+    });
+
+    if (cleanedSessions.length !== sessions.length) {
+        await fs.writeJSON(SESSIONS_FILE, cleanedSessions, { spaces: 4 });
+    }
+
+    return validSessions;
 }
 
 async function deleteAllSessions(userId) {
@@ -239,6 +254,5 @@ module.exports = {
     generateTokens,
     refresh,
     getUserSessions,
-    deleteSession,
     deleteAllSessions
 };
