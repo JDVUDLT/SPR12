@@ -1,36 +1,37 @@
-// ======================================
-// auth.js
-// ======================================
-
-let accessToken = null;
-let isRefreshing = false;
-let refreshPromise = null;
-let isLoggedOut = false;
-
 window.auth = {
-    accessToken: null,
+    user: null,
 
-    init() {
-        this.accessToken = localStorage.getItem('accessToken');
-        return true;
-    },
+    async init() {
+        if (this.user) return true; // уже проинициализированы
 
-    setAccessToken(token) {
-        this.accessToken = token;
-
-        if (token) {
-            localStorage.setItem('accessToken', token);
-        } else {
-            localStorage.removeItem('accessToken');
+        try {
+            const res = await fetch('/api/auth/me', {
+                credentials: 'include'
+            });
+            if (!res.ok) throw new Error('Not authenticated');
+            const data = await res.json();
+            if (data.success && data.user) {
+                this.user = data.user;
+                return true;
+            }
+            throw new Error('Invalid response');
+        } catch (err) {
+            console.error('Auth init error:', err);
+            this.user = null;
+            return false;
         }
     },
 
-    getAccessToken() {
-        return this.accessToken;
+    async getUser() {
+        if (this.user) return this.user;
+        const ok = await this.init();
+        return ok ? this.user : null;
     },
 
     logout() {
-        this.setAccessToken(null);
-        window.location.href = '/login.html';
+        fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+            .finally(() => {
+                window.location.href = '/login.html';
+            });
     }
 };

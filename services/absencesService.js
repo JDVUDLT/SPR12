@@ -21,10 +21,10 @@ async function getByTeam(teamId) {
 async function create(data) {
     await ensureFile();
 
-    const { teamId, startDate, endDate, userId } = data;
-    
-    if (!teamId || !startDate || !endDate) {
-        throw new Error("Обязательные поля: teamId, startDate, endDate");
+    const { teamId, employeeId, type, startDate, endDate, note } = data;
+
+    if (!teamId || !employeeId || !startDate || !endDate) {
+        throw new Error("Обязательные поля: teamId, employeeId, startDate, endDate");
     }
 
     const items = await fs.readJSON(FILE);
@@ -32,14 +32,15 @@ async function create(data) {
     const newItem = {
         id: Date.now().toString(),
         teamId,
+        employeeId,
+        type: type || 'vacation',
         startDate,
         endDate,
-        userId, // уже из JWT
+        note: note || '',
         createdAt: new Date().toISOString()
     };
 
     items.push(newItem);
-
     await fs.writeJSON(FILE, items, { spaces: 2 });
 
     return newItem;

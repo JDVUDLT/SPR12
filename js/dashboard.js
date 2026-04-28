@@ -46,7 +46,12 @@ function initYearSelector() {
 // Загрузить команды пользователя
 async function loadUserTeams() {
     try {
-        const userId = await auth.getUser().id;
+       const meRes = await api.me();
+        if (!meRes.success) {
+            auth.logout();
+            return;
+        }
+        const userId = meRes.user.id;
         const teams = await api.getTeams();
         const userTeams = teams.filter(t => t.ownerId === userId);
         

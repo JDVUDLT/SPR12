@@ -1,31 +1,34 @@
 const service = require('../services/authService');
-const { safeReadJSON } = require('../utils/fileService');
-console.log("🔥 LOGIN CONTROLLER HIT");
-const cookieOptions = {
+
+const accessCookieOptions = {
     httpOnly: true,
-    secure: false, // dev
+    secure: false,          // true на продакшене с HTTPS
     sameSite: 'lax',
-    path: '/'      // 💥 ВАЖНО
+    path: '/',
+    maxAge: 15 * 60 * 1000  // 15 минут
+};
+
+const refreshCookieOptions = {
+    httpOnly: true,
+    secure: false,
+    sameSite: 'lax',        // можно 'strict', но 'lax' удобнее
+    path: '/api/auth',      // только для маршрутов auth
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 дней
 };
 
 // LOGOUT
 async function logout(req, res) {
     try {
         const refreshToken = req.cookies?.refreshToken;
-
         if (refreshToken) {
             await service.logout(refreshToken);
         }
-
-        res.clearCookie('refreshToken', cookieOptions);
-
+        // Только обязательные параметры
+        res.clearCookie('accessToken', { httpOnly: true, secure: false, sameSite: 'lax', path: '/' });
+        res.clearCookie('refreshToken', { httpOnly: true, secure: false, sameSite: 'lax', path: '/api/auth' });
         res.json({ success: true });
-
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            msg: error.message
-        });
+        res.status(400).json({ success: false, msg: error.message });
     }
 }
 
@@ -52,57 +55,37 @@ async function login(req, res) {
     try {
         const result = await service.login(req.body, req);
 
-        res.cookie('refreshToken', result.refreshToken, {
-            httpOnly: true,
-            secure: false,
-            sameSite: 'lax',
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000
-        });
+        // Устанавливаем access и refresh куки
+        res.cookie('accessToken', result.accessToken, accessCookieOptions);
+        res.cookie('refreshToken', result.refreshToken, refreshCookieOptions);
 
         return res.json({
             success: true,
-            accessToken: result.accessToken,
             user: result.user
         });
-
     } catch (e) {
-        return res.status(401).json({
-            success: false,
-            msg: e.message
-        });
+        return res.status(401).json({ success: false, msg: e.message });
     }
 }
 
-// REFRESH
 async function refresh(req, res) {
     try {
-        const refreshToken = req.cookies.refreshToken;
-
-        if (!refreshToken) {
+        const oldRefreshToken = req.cookies.refreshToken;
+        if (!oldRefreshToken) {
             return res.status(401).json({ msg: "No refresh token" });
         }
 
-        const tokens = await service.refresh(refreshToken);
+        const tokens = await service.refresh(oldRefreshToken);
 
-        res.cookie('refreshToken', tokens.refreshToken, {
-            httpOnly: true,
-            sameSite: 'lax',
-            path: '/'
-        });
+        res.cookie('accessToken', tokens.accessToken, accessCookieOptions);
+        res.cookie('refreshToken', tokens.refreshToken, refreshCookieOptions);
 
-        return res.json({
-            accessToken: tokens.accessToken
-        });
-
+        return res.json({ success: true });
     } catch (e) {
         console.log("❌ refresh error:", e.message);
-
-        res.clearCookie("refreshToken", { path: "/" });
-
-        return res.status(401).json({
-            msg: "Refresh failed"
-        });
+        res.clearCookie('accessToken', accessCookieOptions);
+        res.clearCookie('refreshToken', refreshCookieOptions);
+        return res.status(401).json({ msg: "Refresh failed" });
     }
 }
 

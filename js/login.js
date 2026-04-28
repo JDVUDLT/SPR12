@@ -80,18 +80,16 @@ document.addEventListener('DOMContentLoaded', () => {
             // Отправляем запрос через API
             const result = await api.login({ log, pass });
 
-            if (result.accessToken) {
-                auth.setAccessToken(result.accessToken);
-                window.location.href = '/';
+            console.log('🔑 Ответ сервера:', result);
+            window.location.href = '/';
+            if (!result.success) {
+                // ошибка авторизации, показываем сообщение
+                utils.showMessage('message', result.msg || 'Неверный логин или пароль', 'error');
+                return;
             }
-            else {
-                console.log("❌ Ошибка входа:", result.msg);
-                if (typeof utils !== 'undefined' && utils.showMessage) {
-                    utils.showMessage('message', result.msg || 'Неверный логин или пароль', 'error');
-                } else {
-                    alert(result.msg || 'Неверный логин или пароль');
-                }
-            }
+            
+            window.location.href = '/';
+
         } catch (error) {
             console.error('🔥 Ошибка:', error);
             if (typeof utils !== 'undefined' && utils.showMessage) {

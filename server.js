@@ -13,52 +13,24 @@ const absencesRoutes = require('./routes/absences');
 const settingsRoutes = require('./routes/settings');
 const sprintsRoutes = require('./routes/sprints');
 const holidaysRoutes = require('./routes/holidays');
-const { setCSRF, verifyCSRF } = require('./middleware/csrfMiddleware');
+const csrfProtection = require('./middleware/csrfProtection');
 
-// ===== MIDDLEWARE ===== \\
-app.use(express.json()); 
+// ===== MIDDLEWARE =====
+app.use(express.json());
 app.use(cookieParser());
 app.use(cors({
     origin: "http://localhost:3000",
     credentials: true
 }));
-app.use((req, res, next) => {
-    console.log("➡️ REQUEST:", req.method, req.url);
-    next();
-});
-app.use((req, res, next) => {
-    console.log("COOKIE IN REQUEST:", req.cookies);
-    next();
-});
 app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     next();
 });
-const csrfProtectedRoutes = [
-    '/api/teams',
-    '/api/employees',
-    '/api/absences',
-    '/api/sprints',
-    '/api/settings',
-    '/api/holidays'
-];
 
-app.use(setCSRF);
-app.use((req, res, next) => {
-    const isProtected = csrfProtectedRoutes.some(route =>
-        req.path.startsWith(route)
-    );
+// ✅ Единая CSRF-защита через Origin/Referer
+app.use(csrfProtection);
 
-    if (!isProtected) {
-        return next();
-    }
-
-    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(req.method)) {
-        return verifyCSRF(req, res, next);
-    }
-
-    next();
-});
+// Статика
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use(express.static(path.join(__dirname), {

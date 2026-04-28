@@ -11,15 +11,17 @@ async function getAbsences(req, res) {
 
 async function createAbsence(req, res) {
     try {
-        const userId = req.user.id; 
-
         const item = await service.create({
-            ...req.body,
-            userId
+            teamId: req.body.teamId,
+            employeeId: req.body.employeeId,
+            type: req.body.type,
+            startDate: req.body.startDate,
+            endDate: req.body.endDate,
+            note: req.body.note
+            // userId больше не принудительно вставляется из JWT
         });
 
         res.json(item);
-
     } catch (e) {
         res.status(400).json({ msg: e.message });
     }
