@@ -27,4 +27,14 @@ async function create(data) {
     return emp;
 }
 
-module.exports = { getByTeam, create };
+async function deleteById(id) {
+    await ensure();
+    const employees = await fs.readJSON(FILE);
+    const index = employees.findIndex(e => e.id === id);
+    if (index === -1) return null;
+    const deleted = employees.splice(index, 1);
+    await fs.writeJSON(FILE, employees, { spaces: 4 });
+    return deleted[0];
+}
+
+module.exports = { ensure, getByTeam, create, deleteById  };

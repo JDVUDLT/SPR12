@@ -6,5 +6,6 @@ router.use(authMiddleware);
 
 router.get('/:teamId', createAbsence.getAbsences);
 router.post('/', createAbsence.createAbsence);
+router.delete('/:id', createAbsence.deleteAbsence);
 
 module.exports = router;

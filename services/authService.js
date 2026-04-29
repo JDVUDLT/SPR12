@@ -221,7 +221,6 @@ async function getUserSessions(userId) {
             jwt.verify(s.refreshToken, REFRESH_SECRET);
             validSessions.push(s);
         } catch (e) {
-            // токен истёк или невалиден – просто пропускаем
         }
     }
 
