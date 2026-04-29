@@ -27,4 +27,16 @@ async function createAbsence(req, res) {
     }
 }
 
-module.exports = { getAbsences, createAbsence };
+async function deleteAbsence(req, res) {
+    try {
+        const deleted = await service.deleteById(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({ success: false, msg: 'Отсутствие не найдено' });
+        }
+        res.json({ success: true, msg: 'Отсутствие удалено' });
+    } catch (e) {
+        res.status(500).json({ success: false, msg: e.message });
+    }
+}
+
+module.exports = { getAbsences, createAbsence, deleteAbsence };

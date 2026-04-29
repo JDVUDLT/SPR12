@@ -46,4 +46,14 @@ async function create(data) {
     return newItem;
 }
 
-module.exports = { getByTeam, create };
+async function deleteById(id) {
+    await ensureFile();
+    const items = await fs.readJSON(FILE);
+    const index = items.findIndex(a => a.id === id);
+    if (index === -1) return null;
+    const deleted = items.splice(index, 1);
+    await fs.writeJSON(FILE, items, { spaces: 2 });
+    return deleted[0];
+}
+
+module.exports = { getByTeam, create, deleteById };
