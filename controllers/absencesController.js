@@ -39,4 +39,16 @@ async function deleteAbsence(req, res) {
     }
 }
 
-module.exports = { getAbsences, createAbsence, deleteAbsence };
+async function updateAbsence(req, res) {
+    try {
+        const updated = await service.updateById(req.params.id, req.body);
+        if (!updated) {
+            return res.status(404).json({ success: false, msg: 'Отсутствие не найдено' });
+        }
+        res.json({ success: true, item: updated });
+    } catch (e) {
+        res.status(400).json({ success: false, msg: e.message });
+    }
+}
+
+module.exports = { getAbsences, createAbsence, deleteAbsence, updateAbsence };

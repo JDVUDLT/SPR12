@@ -12,7 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    console.log('USER:', auth.user);
     await loadUserProfile();
     setupEventListeners();
 });

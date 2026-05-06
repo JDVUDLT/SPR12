@@ -115,7 +115,10 @@ async function login(data, req) {
 
     const sessions = await safeReadJSON(SESSIONS_FILE);
 
-    sessions.push({
+    // Удаляем старые сессии с этого же устройства
+    const filteredSessions = sessions.filter(s => !(s.userId === user.id && s.userAgent === req.headers['user-agent'] && s.ip === req.ip));
+
+    filteredSessions.push({
         id: Date.now().toString(),
         userId: user.id,
         refreshToken,
@@ -125,7 +128,7 @@ async function login(data, req) {
         lastUsed: new Date().toISOString()
     });
 
-    await fs.writeJSON(SESSIONS_FILE, sessions, { spaces: 4 });
+    await fs.writeJSON(SESSIONS_FILE, filteredSessions, { spaces: 4 });
 
     return {
         accessToken,
@@ -154,12 +157,14 @@ async function generateTokens(user) {
 
     const tokens = await safeReadJSON(SESSIONS_FILE);
 
-    tokens.push({
+    const filteredTokens = tokens.filter(t => t.userId !== user.id);
+
+    filteredTokens.push({
         token: refreshToken,
         userId: user.id
     });
 
-    await fs.writeJSON(SESSIONS_FILE, tokens);
+    await fs.writeJSON(SESSIONS_FILE, filteredTokens);
 
     return { accessToken, refreshToken };
 }

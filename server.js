@@ -27,7 +27,6 @@ app.use('/api', (req, res, next) => {
     next();
 });
 
-// ✅ Единая CSRF-защита через Origin/Referer
 app.use(csrfProtection);
 
 // Статика
