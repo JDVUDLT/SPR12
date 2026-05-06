@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
     const me = await api.request('/api/auth/me');
-    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
     console.log("✅ DOM загружен");
@@ -148,7 +147,6 @@ async function loadCapacityData() {
     console.log(`📋 Загрузка данных для команды ${currentTeamId} за ${currentYear}`);
     
     document.getElementById('capacitySection').style.display = 'block';
-    utils.showMessage('message', 'Расчет трудоемкости...', 'info');
     
     try {
         const [employees, sprints, absences, holidays] = await Promise.all([

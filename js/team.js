@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
     const me = await api.request('/api/auth/me');
-    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
 
@@ -277,7 +276,9 @@ async function loadTeamData() {
     document.getElementById('employeeSection').style.display = 'block';
     
     // Обновляем информацию о команде
-    await updateTeamInfo();    
+    await updateTeamInfo();
+    // Сначала загружаем отсутствия для статусов
+    window.currentAbsencesMap = await loadAbsencesForStatus();
     await loadEmployees();
     await loadAbsences();
 }
@@ -654,6 +655,8 @@ async function addAbsence() {
 
         hideAddAbsenceForm();
         await loadAbsences();
+        // Обновляем карту отсутствий для статусов
+        window.currentAbsencesMap = await loadAbsencesForStatus();
         await loadEmployees();
 
         utils.showMessage('message', '✅ Отсутствие добавлено!', 'success');
@@ -831,6 +834,8 @@ async function editAbsence(id) {
             select.appendChild(option);
         });
         
+        // Скрываем форму добавления, показываем форму редактирования
+        document.getElementById('addAbsenceForm').style.display = 'none';
         document.getElementById('editAbsenceForm').style.display = 'block';
         
     } catch (error) {
@@ -871,7 +876,9 @@ async function saveAbsenceEdit() {
         note: document.getElementById('editAbsenceNote').value
     });
     hideEditAbsenceForm();
+    window.currentAbsencesMap = await loadAbsencesForStatus();
     await loadAbsences();
+    await loadEmployees();
 }
 
 function hideEditAbsenceForm() {

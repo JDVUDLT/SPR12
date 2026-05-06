@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 👉 ТОЛЬКО ПОСЛЕ ЭТОГО ДЕЛАЕМ ЗАПРОСЫ
     const me = await api.request('/api/auth/me');
-    console.log("user:", me);
 
     console.log('✅ Пользователь проверен');
     

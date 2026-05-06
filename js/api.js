@@ -21,22 +21,25 @@ window.api = {
 
         let res = await fetch(url, options);
 
-        // 🔁 Рефреш только для не-авторизационных маршрутов
-        if (res.status === 401 && !retry && !NO_REFRESH_PATHS.includes(url)) {
-            const refreshRes = await fetch('/api/auth/refresh', {
-                method: 'POST',
-                credentials: 'include'
-            });
-
-            if (refreshRes.ok) {
-                // Токены обновились в куках, повторяем исходный запрос
-                res = await fetch(url, options);
-            } else {
-                // если рефреш не удался – действительно разлогиниваем
-                auth.logout();
-                throw new Error('Session expired');
-            }
+    if (res.status === 401 && !retry && !NO_REFRESH_PATHS.includes(url)) {
+        console.log('🔄 Attempting refresh, current url:', url);
+        const refreshRes = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include'
+        });
+        console.log('🔄 Refresh status:', refreshRes.status);
+        
+        if (refreshRes.ok) {
+            console.log('✅ Refresh ok, retrying original request');
+            res = await fetch(url, options);
+            console.log('✅ Retry status:', res.status);
+        } else {
+            const refreshData = await refreshRes.json();
+            console.log('❌ Refresh failed:', refreshData);
+            auth.logout();
+            throw new Error('Session expired');
         }
+    }
 
         const data = await res.json();
         return data;

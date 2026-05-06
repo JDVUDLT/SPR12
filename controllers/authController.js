@@ -18,6 +18,9 @@ const refreshCookieOptions = {
 
 // LOGOUT
 async function logout(req, res) {
+    console.log('=== LOGOUT CALLED ===');
+    console.log('Cookies:', JSON.stringify(req.cookies));
+    console.trace('Logout trace'); // покажет, кто вызвал
     try {
         const refreshToken = req.cookies?.refreshToken;
         if (refreshToken) {
@@ -69,6 +72,9 @@ async function login(req, res) {
 }
 
 async function refresh(req, res) {
+    console.log('=== REFRESH START ===');
+    console.log('Cookies:', req.cookies);
+    console.log('RefreshToken from cookie:', req.cookies.refreshToken);
     try {
         const oldRefreshToken = req.cookies.refreshToken;
         if (!oldRefreshToken) {
