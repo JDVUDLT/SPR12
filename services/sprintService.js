@@ -34,7 +34,7 @@ async function getByTeam(teamId) {
     return sprints.filter(s => s.teamId === teamId);
 }
 
-async function generateSprints({ teamId, duration, firstStart }) {
+async function generateSprints({ teamId, duration, firstStart, coefficient = 1.0 }) {
     await ensureFile(SPRINTS_FILE);
     await ensureFile(HOLIDAYS_FILE);
 
@@ -60,11 +60,12 @@ async function generateSprints({ teamId, duration, firstStart }) {
         currentEnd.setDate(currentEnd.getDate() + duration - 1);
         if (currentEnd > endOfYear) currentEnd = new Date(endOfYear);
 
-        const workingDays = calculateWorkingDays(
-            currentStart.toISOString().split('T')[0],
-            currentEnd.toISOString().split('T')[0],
-            teamHolidays
-        );
+    const rawWorkingDays = calculateWorkingDays(
+        currentStart.toISOString().split('T')[0],
+        currentEnd.toISOString().split('T')[0],
+        teamHolidays
+    );
+    const workingDays = Math.round(rawWorkingDays * coefficient * 100) / 100;
 
         newSprints.push({
             id: `${teamId}_sprint_${Date.now()}_${Math.random().toString(36).substring(2,8)}`,
@@ -145,6 +146,8 @@ async function copySprints(teamId, year) {
         };
     });
 
+    const coefficient = params.coefficient || 1.0;
+    const workingDays = Math.round(rawWorkingDays * coefficient * 100) / 100;
     const updated = [...other, ...newSprints];
 
     await fs.writeJSON(SPRINTS_FILE, updated, { spaces: 4 });

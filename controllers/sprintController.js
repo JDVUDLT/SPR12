@@ -16,12 +16,13 @@ async function generateSprints(req, res) {
         console.log("body:", req.body);
 
         const teamId = req.params.teamId;
-        const { duration, firstStart } = req.body;
+        const { duration, firstStart, coefficient } = req.body;
 
         const result = await service.generateSprints({
             teamId,
             duration,
-            firstStart
+            firstStart,
+            coefficient: coefficient || 1.0
         });
 
         res.json(result);
