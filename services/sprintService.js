@@ -30,6 +30,7 @@ async function ensureFile(file) {
 }
 
 async function getByTeam(teamId) {
+    await ensureFile(SPRINTS_FILE);
     const sprints = await fs.readJSON(SPRINTS_FILE);
     return sprints.filter(s => s.teamId === teamId);
 }
@@ -88,6 +89,8 @@ async function generateSprints({ teamId, duration, firstStart, coefficient = 1.0
 }
 
 async function calculateDays(teamId) {
+    await ensureFile(SPRINTS_FILE);
+    await ensureFile(HOLIDAYS_FILE);
     const sprints = await fs.readJSON(SPRINTS_FILE);
     const holidays = await fs.readJSON(HOLIDAYS_FILE);
 
@@ -146,8 +149,6 @@ async function copySprints(teamId, year) {
         };
     });
 
-    const coefficient = params.coefficient || 1.0;
-    const workingDays = Math.round(rawWorkingDays * coefficient * 100) / 100;
     const updated = [...other, ...newSprints];
 
     await fs.writeJSON(SPRINTS_FILE, updated, { spaces: 4 });

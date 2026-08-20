@@ -242,6 +242,17 @@ async function getUserSessions(userId) {
     return validSessions;
 }
 
+async function deleteSession(sessionId, userId) {
+    let sessions = await safeReadJSON(SESSIONS_FILE);
+
+    const before = sessions.length;
+    sessions = sessions.filter(s => !(s.id === sessionId && s.userId === userId));
+
+    await fs.writeJSON(SESSIONS_FILE, sessions, { spaces: 4 });
+
+    return before !== sessions.length; // true, если что-то реально удалили
+}
+
 async function deleteAllSessions(userId) {
     let sessions = await safeReadJSON(SESSIONS_FILE);
 
@@ -258,5 +269,6 @@ module.exports = {
     generateTokens,
     refresh,
     getUserSessions,
+    deleteSession,
     deleteAllSessions
 };

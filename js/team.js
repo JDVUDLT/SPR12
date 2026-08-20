@@ -1212,7 +1212,7 @@ function checkUpcomingAbsences() {
                 upcomingAbsences.forEach(absence => {
                     const employee = employeeMap[absence.employeeId];
                     if (employee) {
-                        message += `\n• ${employee.fullName} - ${getAbsenceTypeName(absence.type)} с ${utils.formatDate(absence.startDate)}`;
+                        message += `\n• ${employee.fullName} - ${utils.getAbsenceTypeName(absence.type)} с ${utils.formatDate(absence.startDate)}`;
                     }
                 });
                 

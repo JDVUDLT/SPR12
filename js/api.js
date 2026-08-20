@@ -1,11 +1,6 @@
 // ======================================
 // api.js - Stable Auth + Refresh System
 // ======================================
-function getCookie(name) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-}
 
 const NO_REFRESH_PATHS = ['/api/auth/login', '/api/auth/register', '/api/auth/refresh'];
 
@@ -48,11 +43,6 @@ window.api = {
     me() {
         return this.request('/api/auth/me');
     },
-
-    getTeams() {
-        return this.request('/api/teams');
-    },
-
 
     // =========================
     // AUTH
