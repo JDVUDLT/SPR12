@@ -1,5 +1,5 @@
 const fs = require('fs-extra');
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { ACCESS_SECRET, REFRESH_SECRET } = require('../utils/config');
 const path = require('path');

@@ -2,12 +2,25 @@
   "name": "sprint-planner",
   "version": "1.0.0",
   "description": "Планировщик трудоемкости команды по спринтам",
-  "main": "server.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "electron": "electron .",
+    "dist": "electron-builder --win portable"
+  },
+    "build": {
+    "appId": "com.jadeov.sprintplanner",
+    "productName": "SprintPlanner",
+    "asar": false,
+    "files": [
+      "**/*"
+    ],
+    "win": {
+      "target": "portable"
+    }
   },
   "dependencies": {
-    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "cookie": "^1.1.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
@@ -15,5 +28,9 @@
     "fs-extra": "^11.1.1",
     "jsonwebtoken": "^9.0.3",
     "parser": "^0.1.4"
+  },
+  "devDependencies": {
+    "electron": "^41.7.1",
+    "electron-builder": "^26.15.3"
   }
 }
