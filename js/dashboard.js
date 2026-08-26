@@ -259,7 +259,7 @@ function calculateCapacity(employees, sprints, absences, holidays) {
                     id: employee.id,
                     name: employee.fullName || 'Неизвестно',
                     workingDays: employeeWorkingDays,
-                    capacity: employeeWorkingDays
+                    capacity: employeeWorkingDays * 8 * (sprint.coefficient || 1.0)  // ← правильно (часы = дни * 8 часов * коэффициент)
                 });
                 
                 totalDays += employeeWorkingDays;

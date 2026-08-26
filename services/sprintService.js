@@ -74,7 +74,8 @@ async function generateSprints({ teamId, duration, firstStart, coefficient = 1.0
             name: `Спринт ${sprintNumber}`,
             startDate: currentStart.toISOString().split('T')[0],
             endDate: currentEnd.toISOString().split('T')[0],
-            workingDays
+            workingDays,
+            coefficient: coefficient  // ← добавить эту строку
         });
 
         currentStart = new Date(currentEnd);
