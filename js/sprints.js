@@ -316,8 +316,8 @@ async function generateSprints() {
     
     const duration = parseInt(document.getElementById('sprintDuration').value);
     const firstStart = document.getElementById('firstSprintStart').value;
-    
-    console.log("📋 Параметры:", { duration, firstStart, currentTeamId });
+    const coefficient = parseFloat(document.getElementById('sprintCoefficient').value) || 1.0;
+    console.log("📋 Параметры:", { duration, firstStart, coefficient, currentTeamId });  // можно добавить в лог для проверки
     
     if (!duration || !firstStart) {
         utils.showMessage('message', 'Заполните все поля', 'error');
@@ -341,14 +341,14 @@ async function generateSprints() {
         console.log("📡 Шаг 1: Генерация спринтов");
         const result = await api.generateSprints(currentTeamId, {
             duration: duration,
-            firstStart: firstStart
+            firstStart: firstStart,
+            coefficient: coefficient   // добавить эту строку
         });
         
         console.log(`✅ Сгенерировано ${result.length} спринтов`);
         
         // 2. Рассчитываем рабочие дни
         console.log("📡 Шаг 2: Расчет рабочих дней");
-        await api.calculateWorkingDays(currentTeamId);
         
         // 3. Загружаем обновленный список
         console.log("📡 Шаг 3: Загрузка списка");

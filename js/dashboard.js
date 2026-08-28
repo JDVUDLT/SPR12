@@ -160,7 +160,6 @@ async function loadCapacityData() {
         
         if (!sprints || sprints.length === 0) {
             showNoSprintsMessage();
-            drawEmptyChart();
             return;
         }
         
@@ -173,7 +172,6 @@ async function loadCapacityData() {
         
         if (yearSprints.length === 0) {
             showNoSprintsMessage();
-            drawEmptyChart();
             return;
         }
         
@@ -187,7 +185,6 @@ async function loadCapacityData() {
     } catch (error) {
         console.error('❌ Ошибка расчета:', error);
         utils.showMessage('message', 'Ошибка расчета: ' + error.message, 'error');
-        drawEmptyChart();
     }
 }
 
@@ -259,10 +256,10 @@ function calculateCapacity(employees, sprints, absences, holidays) {
                     id: employee.id,
                     name: employee.fullName || 'Неизвестно',
                     workingDays: employeeWorkingDays,
-                    capacity: employeeWorkingDays * 8 * (sprint.coefficient || 1.0)  // ← правильно (часы = дни * 8 часов * коэффициент)
+                    capacity: employeeWorkingDays * (sprint.coefficient || 1.0)
                 });
                 
-                totalDays += employeeWorkingDays;
+                totalDays += employeeWorkingDays * (sprint.coefficient || 1.0);
             }
         });
         
@@ -385,8 +382,6 @@ function displayCapacityData(capacityData) {
             }
         };
     });
-    
-    drawCapacityChart(capacityData);
 }
 
 function displaySummaryStats(capacityData, employees) {
@@ -430,54 +425,6 @@ function showNoSprintsMessage() {
     if (statEmployees) statEmployees.textContent = '0';
     if (statSprints) statSprints.textContent = '0';
     
-    // Очищаем график
-    drawEmptyChart();
-}
-
-function drawEmptyChart() {
-    const container = document.getElementById('chartContainer');
-    if (!container) return;
-    
-    container.innerHTML = `
-        <div style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 12px;">
-            <div style="font-size: 48px; margin-bottom: 15px;">📊</div>
-            <div style="font-size: 16px; color: #7f8c8d;">Нет данных для отображения графика</div>
-            <div style="font-size: 13px; color: #95a5a6; margin-top: 8px;">
-                Сгенерируйте спринты в разделе <a href="/sprints" style="color: #3498db;">"Спринты"</a>
-            </div>
-        </div>
-    `;
-}
-
-function drawCapacityChart(capacityData) {
-    const container = document.getElementById('chartContainer');
-    if (!container) return;
-    
-    if (!capacityData?.sprints?.length) {
-        drawEmptyChart();
-        return;
-    }
-    
-    const validSprints = capacityData.sprints.slice(0, 20);
-    const maxCapacity = Math.max(...validSprints.map(s => s.totalCapacity), 1);
-    
-    let html = '<div class="chart-bars">';
-    validSprints.forEach(sprint => {
-        const percent = (sprint.totalCapacity / maxCapacity) * 100;
-        html += `
-            <div class="chart-item">
-                <div class="chart-label">${sprint.name}</div>
-                <div class="chart-bar-container">
-                    <div class="chart-bar" style="width: ${Math.max(percent, 5)}%">
-                        <span class="chart-value">${sprint.totalCapacity}</span>
-                    </div>
-                </div>
-                <div class="chart-percent">${Math.round(percent)}%</div>
-            </div>
-        `;
-    });
-    html += '</div>';
-    container.innerHTML = html;
 }
 
 // Экспорт в CSV

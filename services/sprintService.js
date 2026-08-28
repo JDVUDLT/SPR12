@@ -99,11 +99,12 @@ async function calculateDays(teamId) {
     const teamHolidays = holidays.filter(h => h.teamId === teamId);
 
     teamSprints.forEach(sprint => {
-        sprint.workingDays = calculateWorkingDays(
+        const rawWorkingDays = calculateWorkingDays(
             sprint.startDate,
             sprint.endDate,
             teamHolidays
         );
+        sprint.workingDays = Math.round(rawWorkingDays * (sprint.coefficient || 1.0) * 100) / 100;
     });
 
     const other = sprints.filter(s => s.teamId !== teamId);
