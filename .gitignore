@@ -1,2 +1,25 @@
-node_modules/
 dist/
+# Зависимости
+node_modules/
+
+# Файлы с данными (флэт-хранилище)
+Users.json
+absences.json
+employees.json
+holidays.json
+refreshTokens.json
+sprints.json
+teams.json
+
+# Переменные окружения / секреты
+.env
+.env.local
+
+# Логи
+*.log
+
+# OS/IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
